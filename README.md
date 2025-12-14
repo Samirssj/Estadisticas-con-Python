@@ -88,4 +88,6 @@ El proyecto utiliza las siguientes librerías de Python:
 ## Instalar Dependencias 
 - pip install pandas numpy matplotlib openpyxl scipy statsmodels python-dateutil
 
-## si no tienes SPSS te puede ayudar mucho ademas que es más facil de entender jejeje
+si no tienes SPSS te puede ayudar mucho ademas que es más facil de entender jejeje
+## Ejecutar el programa
+python graficos_estadisticos.py
