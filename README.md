@@ -95,13 +95,13 @@ si no tienes SPSS te puede ayudar mucho ademas que es más facil de entender jej
 
 ## Ejecutar en linux 🐧
 primero actualizamos nuestro linux con
-sudo apt update && apt upgrade -y
+**sudo apt update && apt upgrade -y**
 - luego de eso instalamos las depencias y herramientas
-sudo apt install python3-venv python3-pip
+**sudo apt install python3-venv python3-pip**
 - Creamos un entorno virtual
-python -m venv estadistica
+**python -m venv estadistica**
 - Una vez creado entramos al entorno
-source estadistica/bin/activate
+**source estadistica/bin/activate**
 - Nuestra terminal nos mostrara algo haci
 
 
@@ -111,6 +111,6 @@ source estadistica/bin/activate
 
 
 Eso quiere decir que ya estamos dentro del entorno virtual e instalamos los paquetes en caso no los tengan
-pip install pandas numpy matplotlib openpyxl scipy statsmodels python-dateutil
+**pip install pandas numpy matplotlib openpyxl scipy statsmodels python-dateutil**
 - Luego de eso ejecutamos el programa
-python graficos_estadisticos.py 
+**python graficos_estadisticos.py**
