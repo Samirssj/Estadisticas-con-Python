@@ -105,8 +105,9 @@ Una vez creado entramos al entorno
 Nuestra terminal nos mostrara algo haci
 
 
--┌──(estadistica)─(mvlwvr3㉿craxker)-[~/Estadisticas-con-Python]
-└─$
+- ┌──(estadistica)─(mvlwvr3㉿craxker)-[~/Estadisticas-con-Python]
+
+- └─$
 
 
 Eso quiere decir que ya estamos dentro del entorno virtual e instalamos los paquetes en caso no los tengan
