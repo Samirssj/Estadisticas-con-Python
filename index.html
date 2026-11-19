@@ -1,0 +1,1414 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Estadística Web</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: cabecera compacta con nombre y estado de los datos, pestañas de análisis, un panel de trabajo a la vez. */
+:root {
+  --bg: #f3f4f2;
+  --panel: #fcfcfb;
+  --ink: #141715;
+  --ink2: #4b514d;
+  --muted: #747a75;
+  --line: #dcdfdb;
+  --grid: #e9ebe8;
+  --soft: #eef0ed;
+  --accent: #1f64b8;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3edf9;
+  --bad: #b83a39;
+  --bad-soft: #f9e4e3;
+  --good: #1b7a4a;
+  --mid: #e4e5e1;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
+  --f-display: 'Bricolage Grotesque', 'IBM Plex Sans', system-ui, sans-serif;
+  --f-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111312; --panel: #1a1a19; --ink: #ecede9; --ink2: #b8bcb6; --muted: #868c86;
+    --line: #2c2f2d; --grid: #262927; --soft: #222523; --accent: #4a93ea; --accent-ink: #07101c;
+    --accent-soft: #1b2a3d; --bad: #ee7372; --bad-soft: #3a2121; --good: #4cc08a; --mid: #343634;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111312; --panel: #1a1a19; --ink: #ecede9; --ink2: #b8bcb6; --muted: #868c86;
+  --line: #2c2f2d; --grid: #262927; --soft: #222523; --accent: #4a93ea; --accent-ink: #07101c;
+  --accent-soft: #1b2a3d; --bad: #ee7372; --bad-soft: #3a2121; --good: #4cc08a; --mid: #343634;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5;
+  padding-block: 0 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1180px; margin: 0 auto; }
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 24px; padding: 22px 0 14px; }
+.brand h1 { font-family: var(--f-display); font-weight: 700; font-size: 28px; line-height: 1.1; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.brand p { margin: 4px 0 0; color: var(--ink2); max-width: 60ch; }
+.chip-data { font-family: var(--f-mono); font-size: 12px; color: var(--ink2); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; max-width: 100%; overflow-wrap: anywhere; }
+.chip-data b { color: var(--ink); font-weight: 500; }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; border-bottom: 1px solid var(--line); margin-bottom: 18px; scrollbar-width: thin; }
+.tab { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--ink2); font: 500 14px var(--f-body); padding: 10px 14px; cursor: pointer; white-space: nowrap; margin-bottom: -1px; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+.card h2, .card h3 { font-family: var(--f-display); font-weight: 600; margin: 0 0 10px; letter-spacing: -0.005em; }
+.card h2 { font-size: 18px; }
+.card h3 { font-size: 15px; }
+h4 { font-size: 13px; margin: 0 0 6px; color: var(--ink2); font-weight: 600; }
+.stack { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field label, .lbl { font-size: 12px; font-weight: 500; color: var(--ink2); }
+select, input[type="number"], input[type="text"], textarea {
+  font: 14px var(--f-body); color: var(--ink); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 6px; padding: 7px 9px; min-width: 0; max-width: 100%;
+}
+select { min-width: 150px; }
+input[type="number"] { width: 100px; }
+textarea { width: 100%; min-height: 84px; font-family: var(--f-mono); font-size: 12px; resize: vertical; }
+.btn { appearance: none; font: 500 13px var(--f-body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.quiet { background: transparent; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.hint { color: var(--muted); font-size: 12.5px; margin: 0; }
+.drop { border: 1.5px dashed var(--line); border-radius: 10px; padding: 16px; display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; justify-content: space-between; background: var(--soft); }
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop strong { font-weight: 600; }
+details summary { cursor: pointer; font-weight: 500; color: var(--ink2); }
+details[open] summary { margin-bottom: 8px; }
+.cols { display: flex; flex-wrap: wrap; gap: 6px; }
+.col-chip { font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; background: var(--panel); display: inline-flex; gap: 6px; align-items: center; }
+.col-chip i { font-style: normal; font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.col-chip.num i { color: var(--accent); }
+.col-chip em { font-style: normal; color: var(--bad); font-family: var(--f-mono); font-size: 11px; }
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; max-width: 100%; }
+.tw.tall { max-height: 58vh; overflow-y: auto; }
+table.tbl { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 13px; }
+.tbl th, .tbl td { padding: 6px 10px; border-bottom: 1px solid var(--grid); text-align: right; white-space: nowrap; }
+.tbl th:first-child, .tbl td:first-child { text-align: left; }
+.tbl.left th, .tbl.left td { text-align: left; }
+.tbl thead th { position: sticky; top: 0; background: var(--soft); color: var(--ink2); font-weight: 600; font-size: 12px; z-index: 1; }
+.tbl tbody tr:last-child td { border-bottom: 0; }
+.tbl td.mono, .mono { font-family: var(--f-mono); font-size: 12.5px; }
+.tbl tbody tr:hover td { background: var(--soft); }
+.plot { width: 100%; }
+.plot svg { max-width: 100%; height: auto; }
+#tip { position: fixed; z-index: 30; pointer-events: none; opacity: 0; background: var(--ink); color: var(--bg); font-size: 12px; padding: 5px 9px; border-radius: 6px; max-width: 300px; left: 0; top: 0; transition: opacity .08s; }
+.plotbar { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+.kv { display: grid; gap: 8px 18px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin: 0 0 12px; }
+.kv div { min-width: 0; }
+.kv dt { font-size: 11.5px; color: var(--muted); }
+.kv dd { margin: 0; font-family: var(--f-mono); font-size: 14px; font-weight: 500; }
+.verdict { margin: 10px 0 0; padding: 9px 12px; border-radius: 6px; background: var(--accent-soft); color: var(--ink); }
+.verdict.no { background: var(--soft); }
+.note { color: var(--ink2); font-size: 12.5px; margin: 8px 0 0; }
+.eq { font-family: var(--f-mono); font-size: 12.5px; overflow-x: auto; padding: 6px 0; }
+.checks { display: flex; flex-wrap: wrap; gap: 6px; }
+.chk { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px; background: var(--panel); font-size: 13px; cursor: pointer; }
+.chk:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.gate { text-align: center; padding: 40px 16px; color: var(--ink2); }
+.err { color: var(--bad); background: var(--bad-soft); border-radius: 6px; padding: 8px 12px; margin: 8px 0 0; }
+#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 9px 14px; border-radius: 8px; font-size: 13px; max-width: min(92vw, 520px); z-index: 20; opacity: 0; pointer-events: none; transition: opacity .2s; }
+#toast.on { opacity: 1; }
+#toast.bad { background: var(--bad); color: #fff; }
+footer { margin-top: 26px; color: var(--muted); font-size: 12.5px; }
+.sub { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+@media (max-width: 560px) {
+  .brand h1 { font-size: 24px; }
+  select { min-width: 0; width: 100%; }
+  .field { flex: 1 1 140px; }
+}
+@media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>Estadística Web</h1>
+      <p>Descriptiva, correlación, regresión, pruebas de hipótesis y gráficos. Carga un Excel o CSV y trabaja sin instalar nada.</p>
+    </div>
+    <div class="chip-data" id="chip">sin datos</div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Secciones">
+    <button class="tab" role="tab" data-tab="datos" aria-selected="true">Datos</button>
+    <button class="tab" role="tab" data-tab="descriptiva" aria-selected="false">Descriptiva</button>
+    <button class="tab" role="tab" data-tab="correlacion" aria-selected="false">Correlación</button>
+    <button class="tab" role="tab" data-tab="regresion" aria-selected="false">Regresión</button>
+    <button class="tab" role="tab" data-tab="pruebas" aria-selected="false">Pruebas</button>
+    <button class="tab" role="tab" data-tab="graficos" aria-selected="false">Gráficos</button>
+    <button class="tab" role="tab" data-tab="distribuciones" aria-selected="false">Distribuciones</button>
+  </nav>
+
+  <!-- DATOS -->
+  <section class="panel stack" id="p-datos">
+    <div class="card stack">
+      <div class="drop" id="drop">
+        <div><strong>Arrastra aquí tu archivo</strong> CSV, XLS o XLSX, o pega una tabla copiada de Excel o Google Sheets con Ctrl+V.</div>
+        <div class="row">
+          <label class="btn primary" for="file">Elegir archivo</label>
+          <input type="file" id="file" accept=".csv,.tsv,.txt,.xls,.xlsx,.xlsm,.ods" hidden>
+          <button class="btn" id="btn-sample" type="button">Datos de ejemplo</button>
+        </div>
+      </div>
+      <details>
+        <summary>Pegar texto de una tabla</summary>
+        <textarea id="pasteBox" placeholder="Pega aquí las celdas copiadas (la primera fila son los nombres de las columnas)"></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn" id="btn-paste" type="button">Usar tabla pegada</button></div>
+      </details>
+    </div>
+
+    <div class="card stack" id="data-card">
+      <div class="sub">
+        <h2 style="margin:0">Tabla de datos</h2>
+        <div class="row" id="data-actions">
+          <div class="field" id="sheet-wrap" hidden><label for="sheet">Hoja</label><select id="sheet"></select></div>
+          <button class="btn" id="view-data" type="button" aria-pressed="true">Vista de datos</button>
+          <button class="btn" id="view-vars" type="button" aria-pressed="false">Vista de variables</button>
+          <button class="btn" id="btn-dropna" type="button">Quitar filas con vacíos</button>
+          <button class="btn" id="btn-xlsx" type="button">Exportar Excel</button>
+          <button class="btn" id="btn-csv" type="button">Exportar CSV</button>
+          <button class="btn" id="btn-txt" type="button">Informe TXT</button>
+          <button class="btn quiet" id="btn-clear" type="button">Limpiar datos</button>
+        </div>
+      </div>
+      <div id="data-summary"></div>
+      <div id="data-table"></div>
+    </div>
+  </section>
+
+  <!-- DESCRIPTIVA -->
+  <section class="panel stack" id="p-descriptiva" hidden>
+    <div class="gate card" data-gate>Carga datos en la pestaña Datos para usar esta sección.<div style="margin-top:10px"><button class="btn primary" data-goto="datos" type="button">Ir a Datos</button></div></div>
+    <div class="stack" data-body>
+      <div class="card">
+        <div class="sub"><h2 style="margin:0">Variables numéricas</h2><button class="btn" id="copy-desc" type="button">Copiar como texto</button></div>
+        <div id="desc-out"></div>
+        <p class="note">Desviación estándar y varianza muestrales (n−1). CV = desviación / |media|. Asimetría y curtosis con corrección de sesgo, igual que pandas.</p>
+      </div>
+      <div class="card">
+        <div class="sub"><h2 style="margin:0">Tablas de frecuencia</h2>
+          <div class="field"><label for="f-var">Variable</label><select id="f-var"></select></div>
+        </div>
+        <div class="grid" id="freq-out"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CORRELACION -->
+  <section class="panel stack" id="p-correlacion" hidden>
+    <div class="gate card" data-gate>Carga datos en la pestaña Datos para usar esta sección.<div style="margin-top:10px"><button class="btn primary" data-goto="datos" type="button">Ir a Datos</button></div></div>
+    <div class="stack" data-body>
+      <div class="card stack">
+        <h2 style="margin:0">Correlación</h2>
+        <div class="row">
+          <div class="field"><label for="c-method">Método</label>
+            <select id="c-method"><option value="pearson">Pearson (lineal)</option><option value="spearman">Spearman (rangos)</option></select></div>
+          <button class="btn primary" id="btn-corr" type="button">Calcular</button>
+        </div>
+        <div><span class="lbl">Variables numéricas</span><div class="checks" id="c-vars" style="margin-top:4px"></div></div>
+        <div id="corr-msg"></div>
+        <div id="corr-out" class="stack"></div>
+      </div>
+      <div class="card" id="corr-plot-card" hidden>
+        <div class="plot" id="plot-corr"></div>
+        <div class="plotbar"><span class="hint">Azul: correlación positiva. Naranja: negativa.</span><button class="btn" data-save="plot-corr" data-name="matriz_correlacion" type="button">Guardar PNG</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REGRESION -->
+  <section class="panel stack" id="p-regresion" hidden>
+    <div class="gate card" data-gate>Carga datos en la pestaña Datos para usar esta sección.<div style="margin-top:10px"><button class="btn primary" data-goto="datos" type="button">Ir a Datos</button></div></div>
+    <div class="stack" data-body>
+      <div class="card stack">
+        <h2 style="margin:0">Regresión lineal múltiple (OLS)</h2>
+        <p class="hint">Modelo: Y = β₀ + β₁X₁ + β₂X₂ + … Las variables categóricas se convierten en variables indicadoras (la primera categoría es la referencia).</p>
+        <div class="row">
+          <div class="field"><label for="r-y">Variable dependiente (Y)</label><select id="r-y"></select></div>
+          <button class="btn primary" id="btn-reg" type="button">Ejecutar regresión</button>
+        </div>
+        <div><span class="lbl">Variables independientes (X)</span><div class="checks" id="r-x" style="margin-top:4px"></div></div>
+        <div id="reg-msg"></div>
+      </div>
+      <div class="card" id="reg-card" hidden>
+        <div id="reg-out"></div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn" id="btn-reg-fit" type="button">Observado vs. predicho</button>
+          <button class="btn" id="btn-reg-res" type="button">Residuos vs. predicho</button>
+        </div>
+        <div class="plot" id="plot-reg" hidden style="margin-top:10px"></div>
+        <div class="plotbar" id="reg-plotbar" hidden><span></span><button class="btn" data-save="plot-reg" data-name="regresion" type="button">Guardar PNG</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRUEBAS -->
+  <section class="panel stack" id="p-pruebas" hidden>
+    <div class="gate card" data-gate>Carga datos en la pestaña Datos para usar esta sección.<div style="margin-top:10px"><button class="btn primary" data-goto="datos" type="button">Ir a Datos</button></div></div>
+    <div class="stack" data-body>
+      <div class="card row">
+        <div class="field"><label for="alpha">Nivel de significancia (α)</label>
+          <select id="alpha"><option value="0.10">0.10</option><option value="0.05" selected>0.05</option><option value="0.01">0.01</option></select></div>
+        <p class="hint" style="max-width:60ch">Cada prueba usa los datos cargados e ignora las filas con vacíos en las variables elegidas.</p>
+      </div>
+      <div class="grid">
+        <div class="card stack">
+          <h3>t de Student para 2 muestras</h3>
+          <div class="field"><label for="t-num">Variable numérica</label><select id="t-num"></select></div>
+          <div class="field"><label for="t-grp">Variable de grupo</label><select id="t-grp"></select></div>
+          <div class="row">
+            <div class="field"><label for="t-a">Grupo A</label><select id="t-a"></select></div>
+            <div class="field"><label for="t-b">Grupo B</label><select id="t-b"></select></div>
+          </div>
+          <div class="field"><label for="t-var">Varianzas</label><select id="t-var"><option value="welch">Distintas (Welch)</option><option value="student">Iguales (Student)</option></select></div>
+          <div class="row"><button class="btn primary" id="btn-t" type="button">Ejecutar t-test</button></div>
+          <div id="t-out"></div>
+        </div>
+        <div class="card stack">
+          <h3>Chi-cuadrado de independencia</h3>
+          <div class="field"><label for="c-v1">Variable 1</label><select id="c-v1"></select></div>
+          <div class="field"><label for="c-v2">Variable 2</label><select id="c-v2"></select></div>
+          <div class="row"><button class="btn primary" id="btn-chi" type="button">Ejecutar chi²</button></div>
+          <div id="chi-out"></div>
+        </div>
+        <div class="card stack">
+          <h3>ANOVA de un factor</h3>
+          <div class="field"><label for="a-num">Variable numérica</label><select id="a-num"></select></div>
+          <div class="field"><label for="a-grp">Factor (grupos)</label><select id="a-grp"></select></div>
+          <div class="row"><button class="btn primary" id="btn-anova" type="button">Ejecutar ANOVA</button></div>
+          <div id="anova-out"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GRAFICOS -->
+  <section class="panel stack" id="p-graficos" hidden>
+    <div class="gate card" data-gate>Carga datos en la pestaña Datos para usar esta sección.<div style="margin-top:10px"><button class="btn primary" data-goto="datos" type="button">Ir a Datos</button></div></div>
+    <div class="stack" data-body>
+      <div class="card stack">
+        <div class="row">
+          <div class="field"><label for="g-v1">Variable 1 (X)</label><select id="g-v1"></select></div>
+          <div class="field"><label for="g-v2">Variable 2 (Y o grupo)</label><select id="g-v2"></select></div>
+          <div class="field"><label for="g-bins">Intervalos</label><input type="number" id="g-bins" value="12" min="1" max="200"></div>
+          <label class="chk"><input type="checkbox" id="g-normal"> Curva normal</label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="g-hist" type="button">Histograma</button>
+          <button class="btn primary" id="g-box" type="button">Boxplot</button>
+          <button class="btn primary" id="g-scatter" type="button">Dispersión X vs Y</button>
+          <button class="btn primary" id="g-bar" type="button">Barras</button>
+          <button class="btn primary" id="g-pie" type="button">Circular</button>
+        </div>
+        <p class="hint">Histograma, barras y circular usan la variable 1. El boxplot usa la variable 1 y, si eliges variable 2, hace una caja por grupo.</p>
+        <div id="g-msg"></div>
+        <div class="plot" id="plot-g" hidden></div>
+        <div class="plotbar" id="g-plotbar" hidden><span></span><button class="btn" data-save="plot-g" data-name="grafico" type="button">Guardar PNG</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DISTRIBUCIONES -->
+  <section class="panel stack" id="p-distribuciones" hidden>
+    <div class="grid">
+      <div class="card stack">
+        <h3>Binomial</h3>
+        <div class="row">
+          <div class="field"><label for="b-n">n (ensayos)</label><input type="number" id="b-n" value="20" min="1" max="1000" step="1"></div>
+          <div class="field"><label for="b-p">p (éxito)</label><input type="number" id="b-p" value="0.4" min="0" max="1" step="0.01"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="b-a">P(a ≤ X ≤ b): a</label><input type="number" id="b-a" step="1"></div>
+          <div class="field"><label for="b-b">b</label><input type="number" id="b-b" step="1"></div>
+        </div>
+        <div class="row"><button class="btn primary" id="btn-binom" type="button">Graficar</button></div>
+      </div>
+      <div class="card stack">
+        <h3>Poisson</h3>
+        <div class="row">
+          <div class="field"><label for="p-l">λ (media esperada)</label><input type="number" id="p-l" value="4" min="0.01" max="1000" step="0.1"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="p-a">P(a ≤ X ≤ b): a</label><input type="number" id="p-a" step="1"></div>
+          <div class="field"><label for="p-b">b</label><input type="number" id="p-b" step="1"></div>
+        </div>
+        <div class="row"><button class="btn primary" id="btn-pois" type="button">Graficar</button></div>
+      </div>
+      <div class="card stack">
+        <h3>Normal</h3>
+        <div class="field"><label for="n-var">Tomar media y desviación de una variable (opcional)</label><select id="n-var"></select></div>
+        <div class="row">
+          <div class="field"><label for="n-m">Media</label><input type="number" id="n-m" value="12" step="any"></div>
+          <div class="field"><label for="n-s">Desv. est.</label><input type="number" id="n-s" value="3" min="0" step="any"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="n-a">Área desde a</label><input type="number" id="n-a" value="10" step="any"></div>
+          <div class="field"><label for="n-b">hasta b</label><input type="number" id="n-b" value="14" step="any"></div>
+        </div>
+        <p class="hint">Deja a o b vacío para un área desde −∞ o hasta +∞.</p>
+        <div class="row"><button class="btn primary" id="btn-norm" type="button">Graficar</button></div>
+      </div>
+    </div>
+    <div class="card" id="d-card" hidden>
+      <div id="d-msg"></div>
+      <div class="plot" id="plot-d"></div>
+      <div class="plotbar"><span class="hint" id="d-info"></span><button class="btn" data-save="plot-d" data-name="distribucion" type="button">Guardar PNG</button></div>
+    </div>
+  </section>
+
+  <footer>Todo se calcula en tu navegador: los datos que cargas no se envían a ningún servidor.</footer>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="window.__noXlsx=true"></script>
+<script>
+'use strict';
+/* ====================== utilidades ====================== */
+const FONT = "'IBM Plex Sans', system-ui, sans-serif";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const isNum = v => typeof v === 'number' && isFinite(v);
+/* min/max seguros para arreglos grandes (Math.min(...a) revienta la pila con muchas filas) */
+const minOf = a => { let m = Infinity; for (let i = 0; i < a.length; i++) if (a[i] < m) m = a[i]; return m; };
+const maxOf = a => { let m = -Infinity; for (let i = 0; i < a.length; i++) if (a[i] > m) m = a[i]; return m; };
+
+function fmt(v, d = 4) {
+  if (v === null || v === undefined || !isFinite(v)) return '—';
+  if (v !== 0 && (Math.abs(v) >= 1e7 || Math.abs(v) < 1e-4)) return v.toExponential(3);
+  return v.toFixed(d);
+}
+function fmtP(p) { if (p === null || !isFinite(p)) return '—'; return p < 0.0001 ? '< 0.0001' : p.toFixed(4); }
+function fmtN(v) { return Number.isInteger(v) ? String(v) : fmt(v, 4); }
+
+let toastTimer;
+function toast(msg, bad = false) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'on' + (bad ? ' bad' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.className = ''; }, 3200);
+}
+function showErr(el, msg) { el.innerHTML = '<div class="err" role="alert">' + esc(msg) + '</div>'; }
+function clearErr(el) { el.innerHTML = ''; }
+
+/* ====================== estadística ====================== */
+/* ====================== funciones especiales (propias, sin librerías) ====================== */
+const M = {
+  lgamma(x) {
+    const c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) return Math.log(Math.PI / Math.abs(Math.sin(Math.PI * x))) - M.lgamma(1 - x);
+    x -= 1; let a = c[0]; const t = x + 7.5;
+    for (let i = 1; i < 9; i++) a += c[i] / (x + i);
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  },
+  betacf(a, b, x) {
+    const EPS = 3e-16, TINY = 1e-300; let qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < TINY) d = TINY; d = 1 / d; let h = d;
+    for (let m = 1; m <= 500; m++) {
+      const m2 = 2 * m; let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < TINY) d = TINY; c = 1 + aa / c; if (Math.abs(c) < TINY) c = TINY; d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < TINY) d = TINY; c = 1 + aa / c; if (Math.abs(c) < TINY) c = TINY; d = 1 / d;
+      const del = d * c; h *= del; if (Math.abs(del - 1) < EPS) break;
+    }
+    return h;
+  },
+  ibeta(x, a, b) {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    const bt = Math.exp(M.lgamma(a + b) - M.lgamma(a) - M.lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    return x < (a + 1) / (a + b + 2) ? bt * M.betacf(a, b, x) / a : 1 - bt * M.betacf(b, a, 1 - x) / b;
+  },
+  gammaQ(a, x) {
+    if (x <= 0) return 1;
+    const lg = M.lgamma(a);
+    if (x < a + 1) {
+      let ap = a, sum = 1 / a, del = sum;
+      for (let n = 0; n < 1000; n++) { ap++; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-16) break; }
+      return 1 - sum * Math.exp(-x + a * Math.log(x) - lg);
+    }
+    const TINY = 1e-300; let b = x + 1 - a, c = 1 / TINY, d = 1 / b, h = d;
+    for (let i = 1; i < 1000; i++) {
+      const an = -i * (i - a); b += 2; d = an * d + b; if (Math.abs(d) < TINY) d = TINY; c = b + an / c; if (Math.abs(c) < TINY) c = TINY; d = 1 / d;
+      const del = d * c; h *= del; if (Math.abs(del - 1) < 1e-16) break;
+    }
+    return Math.exp(-x + a * Math.log(x) - lg) * h;
+  },
+  tail2: (t, df) => M.ibeta(df / (df + t * t), df / 2, 0.5),
+  tcdf(t, df) { const p = 0.5 * M.tail2(t, df); return t > 0 ? 1 - p : p; },
+  tinv(p, df) {
+    let lo = -1, hi = 1; while (M.tcdf(hi, df) < p) hi *= 2; while (M.tcdf(lo, df) > p) lo *= 2;
+    for (let i = 0; i < 120; i++) { const mid = (lo + hi) / 2; if (M.tcdf(mid, df) < p) lo = mid; else hi = mid; }
+    return (lo + hi) / 2;
+  },
+  fsf: (F, d1, d2) => F <= 0 ? 1 : M.ibeta(d2 / (d2 + d1 * F), d2 / 2, d1 / 2),
+  chi2sf: (x, k) => x <= 0 ? 1 : M.gammaQ(k / 2, x / 2),
+  normcdf(x, m, s) {
+    const z = (x - m) / s; if (!isFinite(z)) return z > 0 ? 1 : 0;
+    const q = 0.5 * M.gammaQ(0.5, z * z / 2); return z >= 0 ? 1 - q : q;
+  },
+  binomPmf(k, n, p) {
+    if (k < 0 || k > n) return 0; if (p === 0) return k === 0 ? 1 : 0; if (p === 1) return k === n ? 1 : 0;
+    return Math.exp(M.lgamma(n + 1) - M.lgamma(k + 1) - M.lgamma(n - k + 1) + k * Math.log(p) + (n - k) * Math.log(1 - p));
+  },
+  poisPmf: (k, l) => k < 0 ? 0 : Math.exp(-l + k * Math.log(l) - M.lgamma(k + 1))
+};
+
+const S = {
+  sum: a => a.reduce((s, v) => s + v, 0),
+  mean: a => S.sum(a) / a.length,
+  vari(a, m = S.mean(a)) { return a.length > 1 ? a.reduce((s, v) => s + (v - m) ** 2, 0) / (a.length - 1) : NaN; },
+  sd: a => Math.sqrt(S.vari(a)),
+  quantile(sorted, q) { const pos = (sorted.length - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos); return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo); },
+  skew(a) {
+    const n = a.length; if (n < 3) return NaN; const m = S.mean(a), s = S.sd(a); if (!(s > 0)) return NaN;
+    return n / ((n - 1) * (n - 2)) * a.reduce((t, v) => t + ((v - m) / s) ** 3, 0);
+  },
+  kurt(a) {
+    const n = a.length; if (n < 4) return NaN; const m = S.mean(a), s = S.sd(a); if (!(s > 0)) return NaN;
+    const t = a.reduce((u, v) => u + ((v - m) / s) ** 4, 0);
+    return n * (n + 1) / ((n - 1) * (n - 2) * (n - 3)) * t - 3 * (n - 1) ** 2 / ((n - 2) * (n - 3));
+  },
+  pearson(x, y) {
+    const n = x.length; if (n < 2) return NaN; const mx = S.mean(x), my = S.mean(y);
+    let sxy = 0, sxx = 0, syy = 0;
+    for (let i = 0; i < n; i++) { const dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+    return sxx > 0 && syy > 0 ? sxy / Math.sqrt(sxx * syy) : NaN;
+  },
+  rank(a) {
+    const idx = a.map((v, i) => [v, i]).sort((p, q) => p[0] - q[0]); const r = new Array(a.length);
+    for (let i = 0; i < idx.length;) { let j = i; while (j + 1 < idx.length && idx[j + 1][0] === idx[i][0]) j++; const avg = (i + j) / 2 + 1; for (let k = i; k <= j; k++) r[idx[k][1]] = avg; i = j + 1; }
+    return r;
+  },
+  corrP(r, n) { if (!isFinite(r) || n < 3) return NaN; if (Math.abs(r) >= 1) return 0; const t = r * Math.sqrt((n - 2) / (1 - r * r)); return M.tail2(t, n - 2); },
+  tP: (t, df) => M.tail2(t, df),
+  norm: (x, m, s) => Math.exp(-0.5 * ((x - m) / s) ** 2) / (s * Math.sqrt(2 * Math.PI))
+};
+
+function invert(A) {
+  const n = A.length, M = A.map((r, i) => [...r, ...Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))]);
+  for (let c = 0; c < n; c++) {
+    let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    if (Math.abs(M[p][c]) < 1e-10) return null;
+    [M[c], M[p]] = [M[p], M[c]];
+    const d = M[c][c]; for (let j = 0; j < 2 * n; j++) M[c][j] /= d;
+    for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c]; if (f !== 0) for (let j = 0; j < 2 * n; j++) M[r][j] -= f * M[c][j]; }
+  }
+  return M.map(r => r.slice(n));
+}
+
+function ols(X, y) {
+  const n = X.length, p = X[0].length;
+  if (n <= p) throw new Error('Hacen falta más observaciones completas (' + n + ') que parámetros del modelo (' + p + ').');
+  const sc = Array(p).fill(0);
+  for (let j = 0; j < p; j++) { let s = 0; for (let i = 0; i < n; i++) s += X[i][j] ** 2; sc[j] = Math.sqrt(s) || 1; }
+  const XtX = Array.from({ length: p }, () => Array(p).fill(0)), Xty = Array(p).fill(0);
+  for (let i = 0; i < n; i++) for (let j = 0; j < p; j++) {
+    const xj = X[i][j] / sc[j]; Xty[j] += xj * y[i];
+    for (let k = j; k < p; k++) XtX[j][k] += xj * X[i][k] / sc[k];
+  }
+  for (let j = 0; j < p; j++) for (let k = 0; k < j; k++) XtX[j][k] = XtX[k][j];
+  const inv = invert(XtX);
+  if (!inv) throw new Error('Las variables independientes son linealmente dependientes (multicolinealidad perfecta o una columna constante). Quita alguna.');
+  const beta = Array(p).fill(0);
+  for (let j = 0; j < p; j++) { let s = 0; for (let k = 0; k < p; k++) s += inv[j][k] * Xty[k]; beta[j] = s / sc[j]; }
+  const fitted = X.map(r => r.reduce((s, v, j) => s + v * beta[j], 0));
+  const resid = y.map((v, i) => v - fitted[i]);
+  const ssr = S.sum(resid.map(e => e * e)), my = S.mean(y), sst = S.sum(y.map(v => (v - my) ** 2));
+  const df = n - p, s2 = ssr / df;
+  const se = beta.map((_, j) => Math.sqrt(s2 * inv[j][j] / (sc[j] * sc[j])));
+  const r2 = sst > 0 ? 1 - ssr / sst : NaN, r2adj = 1 - (1 - r2) * (n - 1) / df;
+  const F = ((sst - ssr) / (p - 1)) / s2, pF = M.fsf(F, p - 1, df);
+  const llf = -n / 2 * (Math.log(2 * Math.PI) + Math.log(ssr / n) + 1);
+  return { n, p, beta, se, fitted, resid, ssr, sst, df, r2, r2adj, F, pF, sigma: Math.sqrt(s2), aic: -2 * llf + 2 * p, bic: -2 * llf + p * Math.log(n) };
+}
+
+/* ====================== datos ====================== */
+const D = { cols: [], rows: [], types: {}, name: '', wb: null, sample: false, view: 'data' };
+const lastResults = {};
+const MISSING = new Set(['', 'NA', 'N/A', 'NaN', 'nan', 'null', 'NULL', 'None', '#N/A']);
+const NUM_RE = /^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/;
+
+function parseCell(v, allowComma) {
+  if (v === null || v === undefined) return null;
+  if (v instanceof Date) return isNaN(v) ? null : v.toISOString().slice(0, 10);
+  if (typeof v === 'number') return isFinite(v) ? v : null;
+  if (typeof v === 'boolean') return v ? 'Verdadero' : 'Falso';
+  const s = String(v).trim();
+  if (MISSING.has(s)) return null;
+  if (NUM_RE.test(s)) return Number(s);
+  if (allowComma && /^[-+]?\d+,\d+$/.test(s)) return Number(s.replace(',', '.'));
+  return s;
+}
+
+function parseDelimited(text) {
+  text = text.replace(/^\uFEFF/, '');
+  const firstLine = text.split(/\r?\n/).find(l => l.trim() !== '') || '';
+  let inq = false; const cnt = { '\t': 0, ';': 0, ',': 0 };
+  for (const ch of firstLine) { if (ch === '"') inq = !inq; else if (!inq && ch in cnt) cnt[ch]++; }
+  let delim = ',';
+  if (cnt['\t'] > 0 && cnt['\t'] >= cnt[';'] && cnt['\t'] >= cnt[',']) delim = '\t';
+  else if (cnt[';'] > cnt[',']) delim = ';';
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch;
+    } else if (ch === '"' && cell === '') q = true;
+    else if (ch === delim) { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return { matrix: rows, allowComma: delim !== ',' };
+}
+
+function buildDataset(matrix, name, allowComma) {
+  matrix = matrix.filter(r => r.some(c => c !== null && c !== undefined && String(c).trim() !== ''));
+  if (matrix.length < 2) throw new Error('El archivo necesita una fila de encabezados y al menos una fila de datos.');
+  const width = matrix.reduce((m, r) => Math.max(m, r.length), 0);
+  const used = new Set(); const names = [];
+  for (let j = 0; j < width; j++) {
+    let h = matrix[0][j] === null || matrix[0][j] === undefined ? '' : String(matrix[0][j]).trim();
+    if (!h) h = 'columna_' + (j + 1);
+    let u = h, k = 2; while (used.has(u)) u = h + '_' + k++;
+    used.add(u); names.push(u);
+  }
+  const rows = matrix.slice(1).map(r => { const o = {}; names.forEach((c, j) => { o[c] = parseCell(r[j], allowComma); }); return o; });
+  const keep = names.filter(c => rows.some(r => r[c] !== null));
+  if (!keep.length) throw new Error('No se encontraron valores en el archivo.');
+  const types = {};
+  for (const c of keep) {
+    const vals = rows.map(r => r[c]).filter(v => v !== null);
+    if (vals.every(isNum)) types[c] = 'num';
+    else { types[c] = 'cat'; rows.forEach(r => { if (r[c] !== null) r[c] = String(r[c]); }); }
+  }
+  rows.forEach(r => names.forEach(c => { if (!keep.includes(c)) delete r[c]; }));
+  D.cols = keep; D.rows = rows; D.types = types; D.name = name;
+}
+
+const numCols = () => D.cols.filter(c => D.types[c] === 'num');
+const catCols = () => D.cols.filter(c => D.types[c] !== 'num');
+const numVals = c => D.rows.map(r => r[c]).filter(isNum);
+function asNums(c) { return D.rows.map(r => r[c]).filter(v => v !== null && v !== '').map(Number).filter(isFinite); }
+function levels(c) {
+  const set = [...new Set(D.rows.map(r => r[c]).filter(v => v !== null).map(String))];
+  return D.types[c] === 'num' ? set.sort((a, b) => a - b) : set.sort((a, b) => a.localeCompare(b, 'es'));
+}
+function pairsOf(a, b) {
+  const x = [], y = [];
+  for (const r of D.rows) if (isNum(r[a]) && isNum(r[b])) { x.push(r[a]); y.push(r[b]); }
+  return [x, y];
+}
+function groupsOf(numCol, grpCol) {
+  const m = new Map();
+  for (const r of D.rows) { if (!isNum(r[numCol]) || r[grpCol] === null) continue; const k = String(r[grpCol]); if (!m.has(k)) m.set(k, []); m.get(k).push(r[numCol]); }
+  return m;
+}
+
+/* ---------- carga ---------- */
+function finishLoad(msg) {
+  Object.keys(lastResults).forEach(k => delete lastResults[k]);
+  ['t-out', 'chi-out', 'anova-out', 'reg-out'].forEach(id => { $('#' + id).innerHTML = ''; });
+  $('#reg-card').hidden = true;
+  ['plot-g', 'plot-reg'].forEach(id => { $('#' + id).hidden = true; });
+  ['g-plotbar', 'reg-plotbar'].forEach(id => { $('#' + id).hidden = true; });
+  Object.keys(plots).forEach(k => delete plots[k]);
+  $('#corr-plot-card').hidden = true; $('#corr-out').innerHTML = '';
+  populate(); renderDatos(); syncGates(); renderDescriptiva();
+  if (!$('#p-correlacion').hidden) renderCorr(true);
+  if (msg) toast(msg);
+}
+function loadText(text, name) {
+  try {
+    const { matrix, allowComma } = parseDelimited(text);
+    buildDataset(matrix, name, allowComma); D.wb = null; D.sample = false;
+    finishLoad('Datos cargados: ' + D.rows.length + ' filas, ' + D.cols.length + ' columnas.');
+  } catch (e) { toast(e.message, true); }
+}
+function loadSheet(name) {
+  const ws = D.wb.Sheets[name];
+  const matrix = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
+  buildDataset(matrix, D.fileLabel + (D.wb.SheetNames.length > 1 ? ' · ' + name : ''), false);
+}
+function loadFile(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const rd = new FileReader();
+  rd.onerror = () => toast('No se pudo leer el archivo.', true);
+  if (['xls', 'xlsx', 'xlsm', 'ods'].includes(ext)) {
+    if (typeof XLSX === 'undefined') return toast('No se pudo cargar el lector de Excel (revisa tu conexión). Guarda el archivo como CSV y súbelo de nuevo.', true);
+    rd.onload = () => {
+      try {
+        D.wb = XLSX.read(new Uint8Array(rd.result), { type: 'array', cellDates: true });
+        D.fileLabel = file.name; D.sample = false;
+        loadSheet(D.wb.SheetNames[0]);
+        finishLoad('Datos cargados: ' + D.rows.length + ' filas, ' + D.cols.length + ' columnas.');
+      } catch (e) { toast('No se pudo abrir el Excel: ' + e.message, true); }
+    };
+    rd.readAsArrayBuffer(file);
+  } else {
+    rd.onload = () => loadText(String(rd.result), file.name);
+    rd.readAsText(file);
+  }
+}
+
+function makeSample() {
+  let a = 20261014;
+  const rnd = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const randn = () => Math.sqrt(-2 * Math.log(1 - rnd())) * Math.cos(2 * Math.PI * rnd());
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const carreras = ['Sistemas', 'Contabilidad', 'Derecho'];
+  const m = [['edad', 'sexo', 'carrera', 'estatura_cm', 'horas_estudio', 'asistencia', 'trabaja', 'nota_final']];
+  for (let i = 0; i < 90; i++) {
+    const sexo = rnd() < 0.5 ? 'F' : 'M', carrera = carreras[Math.floor(rnd() * 3)], trabaja = rnd() < 0.4 ? 'Sí' : 'No';
+    const edad = Math.round(clamp(20 + randn() * 2, 17, 30));
+    const est = Math.round((sexo === 'F' ? 158 + randn() * 6 : 170 + randn() * 7));
+    const horas = Math.round(clamp(8 + randn() * 3, 0, 20) * 10) / 10;
+    const asis = Math.round(clamp(85 + randn() * 9, 40, 100));
+    const nota = Math.round(clamp(5.5 + 0.55 * horas + 0.05 * (asis - 85) + (carrera === 'Sistemas' ? 0.8 : carrera === 'Derecho' ? -0.4 : 0) + (trabaja === 'Sí' ? -0.6 : 0) + randn() * 1.5, 0, 20) * 10) / 10;
+    m.push([edad, sexo, carrera, est, horas, asis, trabaja, nota]);
+  }
+  [7, 41, 66].forEach(i => { m[i + 1][4] = null; });
+  [19, 58].forEach(i => { m[i + 1][5] = null; });
+  buildDataset(m, 'ejemplo_estudiantes', false);
+  D.wb = null; D.sample = true;
+}
+
+/* ---------- rellenar controles ---------- */
+function fillSelect(id, items, opts = {}) {
+  const el = $('#' + id), prev = el.value;
+  el.innerHTML = (opts.blank ? '<option value="">' + esc(opts.blank) + '</option>' : '') +
+    items.map(c => '<option value="' + esc(c) + '">' + esc(c) + (opts.tag ? (D.types[c] === 'num' ? ' (num)' : ' (cat)') : '') + '</option>').join('');
+  if (items.includes(prev)) el.value = prev;
+  else if (opts.def !== undefined && items[opts.def] !== undefined) el.value = items[opts.def];
+  else if (opts.blank) el.value = '';
+}
+function fillChecks(id, items, checked) {
+  $('#' + id).innerHTML = items.map((c, i) => '<label class="chk"><input type="checkbox" value="' + esc(c) + '"' + (checked.includes(c) ? ' checked' : '') + '> ' + esc(c) + '</label>').join('');
+}
+const checked = id => $$('#' + id + ' input:checked').map(i => i.value);
+
+function populate() {
+  const nums = numCols(), all = D.cols;
+  fillSelect('g-v1', all, { def: 0, tag: true });
+  fillSelect('g-v2', all, { def: 1, blank: '(ninguna)', tag: true });
+  const gdef = nums[0]; if (gdef) $('#g-v1').value = gdef; if (nums[1]) $('#g-v2').value = nums[1];
+  fillSelect('f-var', catCols(), { blank: 'Todas las categóricas' });
+  fillChecks('c-vars', nums, nums.slice(0, 10));
+  const ydef = nums.length ? nums[nums.length - 1] : '';
+  fillSelect('r-y', nums, { def: nums.length - 1 });
+  if (ydef) $('#r-y').value = ydef;
+  refreshRegX();
+  fillSelect('t-num', nums, { def: 0 }); fillSelect('a-num', nums, { def: 0 });
+  const grpDef = all.findIndex(c => D.types[c] !== 'num' && levels(c).length >= 2);
+  fillSelect('t-grp', all, { tag: true }); fillSelect('a-grp', all, { tag: true });
+  if (grpDef >= 0) { $('#t-grp').value = all[grpDef]; $('#a-grp').value = all[grpDef]; }
+  const twoLev = all.find(c => levels(c).length === 2); if (twoLev) $('#t-grp').value = twoLev;
+  refreshTLevels();
+  fillSelect('c-v1', all, { tag: true, def: 0 }); fillSelect('c-v2', all, { tag: true, def: 1 });
+  const cc = catCols(); if (cc[0]) $('#c-v1').value = cc[0]; if (cc[1]) $('#c-v2').value = cc[1];
+  fillSelect('n-var', nums, { blank: '(escribir media y desviación)' });
+}
+function refreshRegX() {
+  const y = $('#r-y').value, nums = numCols().filter(c => c !== y);
+  fillChecks('r-x', D.cols.filter(c => c !== y), nums.slice(0, 2));
+}
+function refreshTLevels() {
+  const g = $('#t-grp').value, lv = g ? levels(g) : [];
+  const opt = lv.map(l => '<option value="' + esc(l) + '">' + esc(l) + '</option>').join('');
+  $('#t-a').innerHTML = opt; $('#t-b').innerHTML = opt;
+  if (lv.length > 1) $('#t-b').value = lv[1];
+}
+
+function syncGates() {
+  const has = D.rows.length > 0;
+  $$('.panel').forEach(p => { const g = $('[data-gate]', p), b = $('[data-body]', p); if (g) { g.hidden = has; b.hidden = !has; } });
+  $('#chip').innerHTML = has ? '<b>' + esc(D.name) + '</b> · ' + D.rows.length + ' filas × ' + D.cols.length + ' columnas' + (D.sample ? ' · ejemplo' : '') : 'sin datos';
+}
+
+/* ---------- tablas ---------- */
+function T(head, rows) { return { head, rows }; }
+function tblHTML(t, cls = '') {
+  const cell = c => (c && typeof c === 'object') ? '<td' + (c.style ? ' style="' + c.style + '"' : '') + '>' + esc(c.v) + '</td>' : '<td>' + esc(c) + '</td>';
+  return '<div class="tw"><table class="tbl ' + cls + '"><thead><tr>' + t.head.map(h => '<th>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>' +
+    t.rows.map(r => '<tr>' + r.map(cell).join('') + '</tr>').join('') + '</tbody></table></div>';
+}
+function tblText(t) {
+  const rows = [t.head, ...t.rows.map(r => r.map(c => (c && typeof c === 'object') ? c.v : String(c)))];
+  const w = t.head.map((_, j) => rows.reduce((m, r) => Math.max(m, String(r[j]).length), 0));
+  return rows.map(r => r.map((c, j) => j === 0 ? String(c).padEnd(w[j]) : String(c).padStart(w[j])).join('  ')).join('\n');
+}
+
+function descrTable() {
+  const rows = numCols().map(c => {
+    const v = numVals(c), miss = D.rows.length - v.length, s = [...v].sort((a, b) => a - b), m = S.mean(v), sd = S.sd(v);
+    return [c, v.length, miss, fmt(m), fmt(sd), fmt(s[0]), fmt(S.quantile(s, .25)), fmt(S.quantile(s, .5)), fmt(S.quantile(s, .75)), fmt(s[s.length - 1]),
+      fmt(s[s.length - 1] - s[0]), fmt(sd * sd), m !== 0 ? fmt(sd / Math.abs(m)) : '—', fmt(S.skew(v)), fmt(S.kurt(v))];
+  });
+  return T(['Variable', 'n', 'Faltantes', 'Media', 'Desv. est.', 'Mín.', 'Q1', 'Mediana', 'Q3', 'Máx.', 'Rango', 'Varianza', 'CV', 'Asimetría', 'Curtosis'], rows);
+}
+function freqTable(c) {
+  const m = new Map(); let miss = 0;
+  for (const r of D.rows) { if (r[c] === null) miss++; else { const k = String(r[c]); m.set(k, (m.get(k) || 0) + 1); } }
+  let ent = [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'es'));
+  const total = D.rows.length; let cut = 0;
+  if (ent.length > 50) { cut = ent.length - 50; ent = ent.slice(0, 50); }
+  if (miss) ent.push(['(vacío)', miss]);
+  let acc = 0;
+  const rows = ent.map(([k, n]) => { acc += n; return [k, n, (100 * n / total).toFixed(1) + ' %', (100 * acc / total).toFixed(1) + ' %']; });
+  return { t: T([c, 'Frecuencia', '%', '% acumulado'], rows), cut };
+}
+
+/* ====================== render: datos ====================== */
+function renderDatos() {
+  const has = D.rows.length > 0;
+  $('#data-actions').hidden = !has;
+  $('#sheet-wrap').hidden = !(D.wb && D.wb.SheetNames.length > 1);
+  if (D.wb && D.wb.SheetNames.length > 1) {
+    const cur = D.name.includes(' · ') ? D.name.split(' · ').pop() : D.wb.SheetNames[0];
+    $('#sheet').innerHTML = D.wb.SheetNames.map(n => '<option' + (n === cur ? ' selected' : '') + '>' + esc(n) + '</option>').join('');
+  }
+  if (!has) { $('#data-summary').innerHTML = '<p class="hint">No hay datos cargados. Elige un archivo, pega una tabla o prueba con los datos de ejemplo.</p>'; $('#data-table').innerHTML = ''; return; }
+  $('#data-summary').innerHTML = '<div class="cols">' + D.cols.map(c => {
+    const miss = D.rows.filter(r => r[c] === null).length;
+    return '<span class="col-chip ' + (D.types[c] === 'num' ? 'num' : '') + '">' + esc(c) + ' <i>' + (D.types[c] === 'num' ? 'num' : 'cat') + '</i>' + (miss ? ' <em>' + miss + ' vacíos</em>' : '') + '</span>';
+  }).join('') + '</div>';
+  $('#view-data').setAttribute('aria-pressed', D.view === 'data'); $('#view-vars').setAttribute('aria-pressed', D.view === 'vars');
+  if (D.view === 'vars') {
+    const rows = D.cols.map((c, i) => {
+      const vals = D.rows.map(r => r[c]).filter(v => v !== null), miss = D.rows.length - vals.length, uniq = new Set(vals).size;
+      let det; if (D.types[c] === 'num') { det = fmt(minOf(vals), 3) + ' a ' + fmt(maxOf(vals), 3); } else { const lv = levels(c); det = lv.slice(0, 5).join(', ') + (lv.length > 5 ? ' … (+' + (lv.length - 5) + ')' : ''); }
+      return [i + 1, c, D.types[c] === 'num' ? 'Numérica (escala)' : 'Categórica (nominal)', vals.length, miss, uniq, det];
+    });
+    $('#data-table').innerHTML = tblHTML(T(['#', 'Nombre', 'Tipo', 'Válidos', 'Perdidos', 'Valores distintos', 'Rango / categorías'], rows), 'left');
+    return;
+  }
+  const LIM = 500, shown = D.rows.slice(0, LIM);
+  $('#data-table').innerHTML = '<div class="tw tall"><table class="tbl left"><thead><tr><th>#</th>' + D.cols.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr></thead><tbody>' +
+    shown.map((r, i) => '<tr><td class="mono">' + (i + 1) + '</td>' + D.cols.map(c => '<td' + (isNum(r[c]) ? ' class="mono"' : '') + '>' + (r[c] === null ? '' : esc(r[c])) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>' +
+    (D.rows.length > LIM ? '<p class="hint">Se muestran las primeras ' + LIM + ' de ' + D.rows.length + ' filas. Los análisis usan todas.</p>' : '');
+}
+
+/* ====================== render: descriptiva ====================== */
+function renderDescriptiva() {
+  if (!D.rows.length) return;
+  const nums = numCols();
+  $('#desc-out').innerHTML = nums.length ? tblHTML(descrTable()) : '<p class="hint">No hay variables numéricas en estos datos.</p>';
+  renderFreq();
+}
+function renderFreq() {
+  const sel = $('#f-var').value, list = sel ? [sel] : catCols();
+  $('#freq-out').innerHTML = list.length ? list.map(c => {
+    const { t, cut } = freqTable(c);
+    return '<div>' + tblHTML(t) + (cut ? '<p class="hint">Se omiten ' + cut + ' categorías menos frecuentes.</p>' : '') + '</div>';
+  }).join('') : '<p class="hint">No hay variables categóricas en estos datos.</p>';
+}
+
+/* ====================== gráficos SVG propios (sin librerías externas) ====================== */
+const plots = {};
+
+function theme() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  return { panel: g('--panel'), ink: g('--ink'), ink2: g('--ink2'), line: g('--line'), grid: g('--grid'), mid: g('--mid'), s: [1, 2, 3, 4, 5, 6, 7, 8].map(i => g('--s' + i)) };
+}
+function niceNum(range, round) {
+  const e = Math.floor(Math.log10(range)), f = range / Math.pow(10, e);
+  const nf = round ? (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) : (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10);
+  return nf * Math.pow(10, e);
+}
+function niceScale(min, max, n = 6) {
+  if (!isFinite(min) || !isFinite(max)) { min = 0; max = 1; }
+  if (min === max) { const d = Math.abs(min) || 1; min -= d / 2; max += d / 2; }
+  const range = niceNum(max - min, false), step = niceNum(range / (n - 1), true);
+  const lo = Math.floor(min / step + 1e-9) * step, hi = Math.ceil(max / step - 1e-9) * step, ticks = [];
+  for (let v = lo, i = 0; v <= hi + step * 0.5 && i < 60; v += step, i++) ticks.push(+v.toPrecision(12));
+  return { lo, hi, ticks };
+}
+const fmtTick = v => (Math.abs(v) >= 1e6 || (v !== 0 && Math.abs(v) < 1e-3)) ? v.toExponential(1) : String(+v.toPrecision(6));
+const hexRgb = h => { h = h.replace('#', ''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
+const mixHex = (a, b, k) => { const A = hexRgb(a), B = hexRgb(b); return 'rgb(' + A.map((v, i) => Math.round(v + (B[i] - v) * k)).join(',') + ')'; };
+function textOn(color) {
+  const c = color.startsWith('#') ? hexRgb(color) : color.match(/\d+/g).map(Number);
+  return (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) > 150 ? '#141715' : '#ffffff';
+}
+const tip = s => ' data-tip="' + esc(s) + '"';
+const clip = (s, n) => { s = String(s); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+const px = v => (+v).toFixed(1);
+
+function chartSVG(o) {
+  const t = o.t, W = o.W, H = o.H || Math.round(Math.min(480, Math.max(320, W * 0.56)));
+  const ml = o.ml || 62, mr = o.mr || 22, mt = o.sub ? 74 : 54, mb = o.mb || 56;
+  const pw = W - ml - mr, ph = H - mt - mb, X = o.x, Y = o.y, cats = X.cats || null;
+  const sx = v => ml + (v - X.lo) / (X.hi - X.lo) * pw, sy = v => mt + ph - (v - Y.lo) / (Y.hi - Y.lo) * ph;
+  const cx = i => ml + (i + 0.5) / cats.length * pw, bw = cats ? pw / cats.length : 0;
+  const ctx = { W, H, ml, mt, pw, ph, t, sx, sy, cx, bw };
+  let s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="' + esc(o.title) + '" style="display:block;font-family:' + FONT + '">';
+  s += '<rect width="' + W + '" height="' + H + '" fill="' + t.panel + '"/>';
+  s += '<text x="14" y="26" font-size="15" font-weight="600" fill="' + t.ink + '">' + esc(clip(o.title, Math.floor((W - 28) / 8))) + '</text>';
+  if (o.sub) s += '<text x="14" y="46" font-size="12" fill="' + t.ink2 + '">' + esc(clip(o.sub, Math.floor((W - 28) / 6.4))) + '</text>';
+  Y.ticks.forEach(v => { const y = sy(v); s += '<line x1="' + ml + '" x2="' + (ml + pw) + '" y1="' + px(y) + '" y2="' + px(y) + '" stroke="' + t.grid + '"/><text x="' + (ml - 8) + '" y="' + px(y + 4) + '" text-anchor="end" font-size="11" fill="' + t.ink2 + '">' + fmtTick(v) + '</text>'; });
+  if (cats) {
+    const rot = cats.length > 7, step = Math.ceil(cats.length / (rot ? 30 : 10));
+    cats.forEach((c, i) => {
+      if (i % step) return; const x = cx(i), lab = esc(clip(c, rot ? 16 : 14));
+      s += rot ? '<text transform="translate(' + px(x) + ',' + (mt + ph + 14) + ') rotate(-35)" text-anchor="end" font-size="11" fill="' + t.ink2 + '">' + lab + '</text>'
+        : '<text x="' + px(x) + '" y="' + (mt + ph + 18) + '" text-anchor="middle" font-size="11" fill="' + t.ink2 + '">' + lab + '</text>';
+    });
+  } else {
+    X.ticks.forEach(v => { const x = sx(v); if (x < ml - 1 || x > ml + pw + 1) return; s += '<line x1="' + px(x) + '" x2="' + px(x) + '" y1="' + mt + '" y2="' + (mt + ph) + '" stroke="' + t.grid + '"/><text x="' + px(x) + '" y="' + (mt + ph + 18) + '" text-anchor="middle" font-size="11" fill="' + t.ink2 + '">' + fmtTick(v) + '</text>'; });
+  }
+  s += '<line x1="' + ml + '" x2="' + (ml + pw) + '" y1="' + (mt + ph) + '" y2="' + (mt + ph) + '" stroke="' + t.line + '"/><line x1="' + ml + '" x2="' + ml + '" y1="' + mt + '" y2="' + (mt + ph) + '" stroke="' + t.line + '"/>';
+  s += o.draw(ctx);
+  if (o.xl) s += '<text x="' + (ml + pw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="12" fill="' + t.ink2 + '">' + esc(clip(o.xl, Math.floor(pw / 7))) + '</text>';
+  if (o.yl) s += '<text transform="translate(14,' + (mt + ph / 2) + ') rotate(-90)" text-anchor="middle" font-size="12" fill="' + t.ink2 + '">' + esc(clip(o.yl, Math.floor(ph / 7))) + '</text>';
+  if (o.legend) {
+    let x = W - mr;
+    o.legend.slice().reverse().forEach(l => {
+      const w = l.label.length * 6.4 + 30; x -= w;
+      s += '<g transform="translate(' + px(x) + ',' + (mt - 14) + ')">' + (l.dash ? '<line x1="0" x2="18" y1="0" y2="0" stroke="' + l.color + '" stroke-width="2" stroke-dasharray="5 3"/>' : l.line ? '<line x1="0" x2="18" y1="0" y2="0" stroke="' + l.color + '" stroke-width="2.4"/>' : '<circle cx="9" cy="0" r="5" fill="' + l.color + '"/>') +
+        '<text x="24" y="4" font-size="11.5" fill="' + t.ink2 + '">' + esc(l.label) + '</text></g>';
+    });
+  }
+  return s + '</svg>';
+}
+
+function renderPlot(id) {
+  const el = $('#' + id); if (!el || !plots[id]) return;
+  el.hidden = false;
+  const W = Math.max(300, Math.floor(el.clientWidth || (el.parentElement && el.parentElement.clientWidth) || 700));
+  try { el.innerHTML = plots[id](W, theme()); }
+  catch (e) { el.innerHTML = '<div class="err">No se pudo dibujar el gráfico: ' + esc(e.message) + '</div>'; }
+}
+function draw(id, builder) { plots[id] = builder; renderPlot(id); }
+function redrawVisible() { Object.keys(plots).forEach(id => { const el = $('#' + id); if (el && el.offsetParent !== null) renderPlot(id); }); }
+
+async function savePlot(id, name) {
+  const svg = $('#' + id + ' svg'); if (!svg) return toast('Primero genera un gráfico.', true);
+  try {
+    const vb = svg.viewBox.baseVal, w = vb.width, h = vb.height, clone = svg.cloneNode(true);
+    clone.setAttribute('width', w); clone.setAttribute('height', h);
+    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(clone));
+    const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+    const c = document.createElement('canvas'); c.width = w * 2; c.height = h * 2;
+    const g = c.getContext('2d'); g.scale(2, 2); g.drawImage(img, 0, 0, w, h);
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    await saveFile(name + '.png', blob);
+  } catch (e) { toast('No se pudo generar la imagen.', true); }
+}
+
+/* tooltip al pasar el cursor */
+(function () {
+  const tp = document.createElement('div'); tp.id = 'tip'; document.body.appendChild(tp);
+  const hide = () => { tp.style.opacity = 0; };
+  document.addEventListener('mousemove', e => {
+    const el = e.target.closest && e.target.closest('[data-tip]');
+    if (!el) return hide();
+    tp.textContent = el.getAttribute('data-tip'); tp.style.opacity = 1;
+    const r = tp.getBoundingClientRect(); let x = e.clientX + 14, y = e.clientY + 14;
+    if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14; if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+    tp.style.left = Math.max(4, x) + 'px'; tp.style.top = Math.max(4, y) + 'px';
+  });
+  document.addEventListener('scroll', hide, true);
+})();
+
+/* gráfico de dispersión genérico */
+function scatterSVG(W, t, o) {
+  const xs = o.xs, ys = o.ys, xr = o.xr || [minOf(xs), maxOf(xs)], yr = o.yr || [minOf(ys), maxOf(ys)];
+  const px_ = (xr[1] - xr[0]) * 0.04, py_ = (yr[1] - yr[0]) * 0.06;
+  const X = niceScale(xr[0] - px_, xr[1] + px_), Y = niceScale(yr[0] - py_, yr[1] + py_);
+  const legend = [{ label: o.pointLabel || 'Datos', color: t.s[0] }]; if (o.line) legend.push({ label: o.line.label, color: t.s[1], dash: true });
+  return chartSVG({ W, t, title: o.title, sub: o.sub ? o.sub + (xs.length > 4000 ? '   ·   se dibujan ' + Math.ceil(xs.length / Math.ceil(xs.length / 4000)) + ' de ' + xs.length + ' puntos' : '') : (xs.length > 4000 ? 'Se dibujan ' + Math.ceil(xs.length / Math.ceil(xs.length / 4000)) + ' de ' + xs.length + ' puntos' : ''), xl: o.xl, yl: o.yl, x: X, y: Y, legend, draw: c => {
+    let g = '';
+    if (o.line) g += '<line x1="' + px(c.sx(o.line.x0)) + '" y1="' + px(c.sy(o.line.y0)) + '" x2="' + px(c.sx(o.line.x1)) + '" y2="' + px(c.sy(o.line.y1)) + '" stroke="' + t.s[1] + '" stroke-width="2" stroke-dasharray="6 4"/>';
+    const n = xs.length, step = Math.max(1, Math.ceil(n / 4000)), r = n > 1500 ? 2.5 : n > 400 ? 3.5 : 4.8;
+    for (let i = 0; i < n; i += step) g += '<circle cx="' + px(c.sx(xs[i])) + '" cy="' + px(c.sy(ys[i])) + '" r="' + r + '" fill="' + t.s[0] + '" fill-opacity="0.8" stroke="' + t.panel + '" stroke-width="1"' + tip((o.xtip || 'x') + ': ' + fmt(xs[i], 3) + '   ' + (o.ytip || 'y') + ': ' + fmt(ys[i], 3)) + '/>';
+    return g;
+  } });
+}
+
+const asNumsOf = c => asNums(c);
+function plotHist() {
+  const msg = $('#g-msg'); clearErr(msg);
+  const v = $('#g-v1').value, x = asNums(v);
+  if (!x.length) return showErr(msg, 'La variable "' + v + '" no tiene valores numéricos.');
+  const bins = Math.min(200, Math.max(1, parseInt($('#g-bins').value) || 12)), withNorm = $('#g-normal').checked;
+  const mn = minOf(x), mx = maxOf(x), w = mx > mn ? (mx - mn) / bins : 1;
+  const counts = Array(bins).fill(0);
+  x.forEach(val => { let k = Math.floor((val - mn) / w); if (k >= bins) k = bins - 1; counts[k]++; });
+  const mean = S.mean(x), sd = S.sd(x), norm = withNorm && sd > 0;
+  const curve = norm ? Array.from({ length: 120 }, (_, i) => { const u = mn + (w * bins) * i / 119; return [u, x.length * w * S.norm(u, mean, sd)]; }) : [];
+  const X = niceScale(mn, mn + w * bins), Y = niceScale(0, Math.max(maxOf(counts), curve.length ? maxOf(curve.map(p => p[1])) : 0) * 1.1);
+  draw('plot-g', (W, t) => chartSVG({ W, t, title: 'Histograma: ' + v, sub: 'n = ' + x.length + ' · media = ' + fmt(mean, 3) + ' · desv. est. = ' + fmt(sd, 3), xl: v, yl: 'Frecuencia', x: X, y: Y, legend: norm ? [{ label: 'Normal', color: t.s[1], line: true }] : null, draw: c => {
+    let g = '';
+    counts.forEach((n, i) => { const x0 = c.sx(mn + w * i), x1 = c.sx(mn + w * (i + 1)), y = c.sy(n);
+      g += '<rect x="' + px(x0 + 0.75) + '" y="' + px(y) + '" width="' + px(Math.max(0.5, x1 - x0 - 1.5)) + '" height="' + px(Math.max(0, c.sy(0) - y)) + '" rx="2" fill="' + t.s[0] + '"' + tip('[' + fmt(mn + w * i, 3) + ' – ' + fmt(mn + w * (i + 1), 3) + ')  Frecuencia: ' + n) + '/>'; });
+    if (curve.length) g += '<polyline fill="none" stroke="' + t.s[1] + '" stroke-width="2.4" points="' + curve.map(p => px(c.sx(p[0])) + ',' + px(c.sy(p[1]))).join(' ') + '"/>';
+    return g;
+  } }));
+  $('#g-plotbar').hidden = false;
+}
+function plotBox() {
+  const msg = $('#g-msg'); clearErr(msg);
+  const v = $('#g-v1').value, g = $('#g-v2').value, x = asNums(v);
+  if (!x.length) return showErr(msg, 'La variable "' + v + '" no tiene valores numéricos.');
+  let groups = [[v, x]];
+  if (g && g !== v) {
+    const lv = levels(g); if (lv.length > 30) return showErr(msg, 'La variable de grupo "' + g + '" tiene ' + lv.length + ' valores distintos; elige una con 30 o menos.');
+    groups = lv.map(l => [l, D.rows.filter(r => r[g] !== null && String(r[g]) === l && r[v] !== null && r[v] !== '' && isFinite(Number(r[v]))).map(r => Number(r[v]))]).filter(p => p[1].length);
+  }
+  const st = groups.map(([name, vals]) => {
+    const s = [...vals].sort((a, b) => a - b), q1 = S.quantile(s, .25), q2 = S.quantile(s, .5), q3 = S.quantile(s, .75), iqr = q3 - q1;
+    const lo = s.find(u => u >= q1 - 1.5 * iqr), hi = [...s].reverse().find(u => u <= q3 + 1.5 * iqr);
+    return { name, n: s.length, q1, q2, q3, lo, hi, out: s.filter(u => u < lo || u > hi), mean: S.mean(s) };
+  });
+  const all = st.flatMap(b => [b.lo, b.hi, ...b.out]), pad = (maxOf(all) - minOf(all)) * 0.05 || 1;
+  const Y = niceScale(minOf(all) - pad, maxOf(all) + pad), X = { lo: 0, hi: 1, ticks: [], cats: st.map(b => b.name) };
+  draw('plot-g', (W, t) => chartSVG({ W, t, title: 'Boxplot: ' + v + (groups.length > 1 || g ? ' por ' + g : ''), xl: groups.length > 1 ? g : '', yl: v, x: X, y: Y, draw: c => {
+    let o = '';
+    st.forEach((b, i) => {
+      const cxx = c.cx(i), hw = Math.min(c.bw * 0.5, 70) / 2, tp_ = 'Grupo: ' + b.name + '  n = ' + b.n + '  mediana = ' + fmt(b.q2, 3) + '  Q1 = ' + fmt(b.q1, 3) + '  Q3 = ' + fmt(b.q3, 3) + '  media = ' + fmt(b.mean, 3);
+      o += '<line x1="' + px(cxx) + '" x2="' + px(cxx) + '" y1="' + px(c.sy(b.hi)) + '" y2="' + px(c.sy(b.q3)) + '" stroke="' + t.s[0] + '" stroke-width="1.6"/><line x1="' + px(cxx) + '" x2="' + px(cxx) + '" y1="' + px(c.sy(b.q1)) + '" y2="' + px(c.sy(b.lo)) + '" stroke="' + t.s[0] + '" stroke-width="1.6"/>' +
+        '<line x1="' + px(cxx - hw / 2) + '" x2="' + px(cxx + hw / 2) + '" y1="' + px(c.sy(b.hi)) + '" y2="' + px(c.sy(b.hi)) + '" stroke="' + t.s[0] + '" stroke-width="1.6"/><line x1="' + px(cxx - hw / 2) + '" x2="' + px(cxx + hw / 2) + '" y1="' + px(c.sy(b.lo)) + '" y2="' + px(c.sy(b.lo)) + '" stroke="' + t.s[0] + '" stroke-width="1.6"/>' +
+        '<rect x="' + px(cxx - hw) + '" y="' + px(c.sy(b.q3)) + '" width="' + px(hw * 2) + '" height="' + px(Math.max(1, c.sy(b.q1) - c.sy(b.q3))) + '" fill="' + t.s[0] + '" fill-opacity="0.22" stroke="' + t.s[0] + '" stroke-width="1.6" rx="2"' + tip(tp_) + '/>' +
+        '<line x1="' + px(cxx - hw) + '" x2="' + px(cxx + hw) + '" y1="' + px(c.sy(b.q2)) + '" y2="' + px(c.sy(b.q2)) + '" stroke="' + t.s[0] + '" stroke-width="2.6"/>';
+      b.out.forEach(u => { o += '<circle cx="' + px(cxx) + '" cy="' + px(c.sy(u)) + '" r="3.6" fill="none" stroke="' + t.s[0] + '" stroke-width="1.4"' + tip('Valor atípico: ' + fmt(u, 3)) + '/>'; });
+    });
+    return o;
+  } }));
+  $('#g-plotbar').hidden = false;
+}
+function plotScatter() {
+  const msg = $('#g-msg'); clearErr(msg);
+  const xn = $('#g-v1').value, yn = $('#g-v2').value;
+  if (!xn || !yn) return showErr(msg, 'Elige la variable 1 (X) y la variable 2 (Y).');
+  const xs = [], ys = [];
+  for (const r of D.rows) { const a = r[xn], b = r[yn]; if (a === null || b === null || a === '' || b === '') continue; const p = Number(a), q = Number(b); if (isFinite(p) && isFinite(q)) { xs.push(p); ys.push(q); } }
+  if (xs.length < 2) return showErr(msg, 'Las dos variables deben ser numéricas y tener al menos 2 filas completas.');
+  const mx = S.mean(xs), my = S.mean(ys); let sxy = 0, sxx = 0;
+  for (let i = 0; i < xs.length; i++) { sxy += (xs[i] - mx) * (ys[i] - my); sxx += (xs[i] - mx) ** 2; }
+  const b1 = sxx > 0 ? sxy / sxx : NaN, b0 = my - b1 * mx, r = S.pearson(xs, ys), lo = minOf(xs), hi = maxOf(xs);
+  const sub = isFinite(b1) ? 'y = ' + fmt(b0, 3) + (b1 < 0 ? ' − ' : ' + ') + fmt(Math.abs(b1), 3) + '·x   ·   r = ' + fmt(r, 3) + '   ·   R² = ' + fmt(r * r, 3) + '   ·   n = ' + xs.length : '';
+  draw('plot-g', (W, t) => scatterSVG(W, t, { title: yn + ' vs ' + xn, sub, xl: xn, yl: yn, xs, ys, xtip: xn, ytip: yn, line: isFinite(b1) ? { label: 'Recta de regresión', x0: lo, y0: b0 + b1 * lo, x1: hi, y1: b0 + b1 * hi } : null }));
+  $('#g-plotbar').hidden = false;
+}
+function plotBar() {
+  const msg = $('#g-msg'); clearErr(msg);
+  const v = $('#g-v1').value; if (!v) return showErr(msg, 'Elige una variable.');
+  const m = new Map(); D.rows.forEach(r => { if (r[v] !== null) { const k = String(r[v]); m.set(k, (m.get(k) || 0) + 1); } });
+  let ent = [...m.entries()].sort((a, b) => b[1] - a[1]);
+  if (!ent.length) return showErr(msg, 'La variable no tiene valores.');
+  const cut = Math.max(0, ent.length - 30); ent = ent.slice(0, 30);
+  const Y = niceScale(0, maxOf(ent.map(e => e[1])) * 1.12), X = { lo: 0, hi: 1, ticks: [], cats: ent.map(e => e[0]) };
+  draw('plot-g', (W, t) => chartSVG({ W, t, title: 'Barras: ' + v + (cut ? ' (30 más frecuentes)' : ''), xl: v, yl: 'Frecuencia', x: X, y: Y, mb: ent.length > 7 ? 84 : 56, draw: c => {
+    let g = '';
+    ent.forEach(([k, n], i) => { const w = Math.min(c.bw * 0.7, 90), x = c.cx(i) - w / 2, y = c.sy(n);
+      g += '<rect x="' + px(x) + '" y="' + px(y) + '" width="' + px(w) + '" height="' + px(Math.max(0, c.sy(0) - y)) + '" rx="3" fill="' + t.s[0] + '"' + tip(k + ': ' + n) + '/>';
+      if (ent.length <= 14) g += '<text x="' + px(c.cx(i)) + '" y="' + px(y - 6) + '" text-anchor="middle" font-size="11.5" fill="' + t.ink2 + '">' + n + '</text>'; });
+    return g;
+  } }));
+  $('#g-plotbar').hidden = false;
+}
+function plotPie() {
+  const msg = $('#g-msg'); clearErr(msg);
+  const v = $('#g-v1').value; if (!v) return showErr(msg, 'Elige una variable.');
+  const m = new Map(); D.rows.forEach(r => { if (r[v] !== null) { const k = String(r[v]); m.set(k, (m.get(k) || 0) + 1); } });
+  let ent = [...m.entries()].sort((a, b) => b[1] - a[1]);
+  if (!ent.length) return showErr(msg, 'La variable no tiene valores.');
+  if (ent.length > 8) { const rest = ent.slice(7).reduce((s, e) => s + e[1], 0); ent = [...ent.slice(0, 7), ['Otras', rest]]; }
+  const total = ent.reduce((s, e) => s + e[1], 0);
+  draw('plot-g', (W, t) => {
+    const wide = W >= 560, R = Math.min(150, wide ? W * 0.26 : W * 0.34), cx = wide ? W * 0.3 : W / 2, cy = 62 + R;
+    const lx = wide ? W * 0.58 : 24, ly = wide ? 76 : cy + R + 28, H = wide ? Math.max(cy + R + 26, ly + ent.length * 24 + 16) : ly + ent.length * 22 + 8;
+    let s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" style="display:block;font-family:' + FONT + '"><rect width="' + W + '" height="' + H + '" fill="' + t.panel + '"/>';
+    s += '<text x="14" y="26" font-size="15" font-weight="600" fill="' + t.ink + '">' + esc(clip('Gráfico circular: ' + v, Math.floor((W - 28) / 8))) + '</text>';
+    let a0 = -Math.PI / 2;
+    ent.forEach(([k, n], i) => {
+      const f = n / total, a1 = a0 + f * 2 * Math.PI, col = t.s[i % 8], tp_ = k + ': ' + n + ' (' + (100 * f).toFixed(1) + ' %)';
+      if (ent.length === 1) s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="' + col + '"' + tip(tp_) + '/>';
+      else s += '<path d="M' + px(cx) + ',' + px(cy) + ' L' + px(cx + R * Math.cos(a0)) + ',' + px(cy + R * Math.sin(a0)) + ' A' + R + ',' + R + ' 0 ' + (f > 0.5 ? 1 : 0) + ' 1 ' + px(cx + R * Math.cos(a1)) + ',' + px(cy + R * Math.sin(a1)) + ' Z" fill="' + col + '" stroke="' + t.panel + '" stroke-width="2"' + tip(tp_) + '/>';
+      if (f >= 0.06) { const am = (a0 + a1) / 2; s += '<text x="' + px(cx + R * 0.64 * Math.cos(am)) + '" y="' + px(cy + R * 0.64 * Math.sin(am) + 4) + '" text-anchor="middle" font-size="12" font-weight="600" fill="' + textOn(col) + '" pointer-events="none">' + (100 * f).toFixed(0) + ' %</text>'; }
+      const yy = ly + i * (wide ? 24 : 22);
+      s += '<rect x="' + px(lx) + '" y="' + px(yy - 10) + '" width="12" height="12" rx="2" fill="' + col + '"/><text x="' + px(lx + 20) + '" y="' + px(yy) + '" font-size="12.5" fill="' + t.ink2 + '">' + esc(clip(k, 24)) + ' · ' + n + ' (' + (100 * f).toFixed(1) + ' %)</text>';
+      a0 = a1;
+    });
+    return s + '</svg>';
+  });
+  $('#g-plotbar').hidden = false;
+}
+
+function heatSVG(W, t, vars, R, title) {
+  const k = vars.length, maxLen = Math.max(...vars.map(v => v.length));
+  const ml = Math.min(150, maxLen * 6.4 + 16), mr = 74, mt = 48, mb = Math.min(120, maxLen * 4.4 + 22);
+  const cell = Math.max(24, Math.min(72, (W - ml - mr) / k)), gw = cell * k, H = mt + gw + mb;
+  const Wd = Math.max(W, ml + gw + mr);
+  let s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + Wd + ' ' + H + '" width="100%" role="img" style="display:block;font-family:' + FONT + '"><rect width="' + Wd + '" height="' + H + '" fill="' + t.panel + '"/>';
+  s += '<defs><linearGradient id="hgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + t.s[0] + '"/><stop offset="0.5" stop-color="' + t.mid + '"/><stop offset="1" stop-color="' + t.s[1] + '"/></linearGradient></defs>';
+  s += '<text x="14" y="26" font-size="15" font-weight="600" fill="' + t.ink + '">' + esc(title) + '</text>';
+  for (let i = 0; i < k; i++) {
+    s += '<text x="' + (ml - 8) + '" y="' + px(mt + i * cell + cell / 2 + 4) + '" text-anchor="end" font-size="11.5" fill="' + t.ink2 + '">' + esc(clip(vars[i], 22)) + '</text>';
+    s += '<text transform="translate(' + px(ml + i * cell + cell / 2) + ',' + (mt + gw + 14) + ') rotate(-40)" text-anchor="end" font-size="11.5" fill="' + t.ink2 + '">' + esc(clip(vars[i], 22)) + '</text>';
+    for (let j = 0; j < k; j++) {
+      const r = R[i][j], ok = isFinite(r), col = !ok ? t.mid : r >= 0 ? mixHex(t.mid, t.s[0], Math.min(1, r)) : mixHex(t.mid, t.s[1], Math.min(1, -r));
+      s += '<rect x="' + px(ml + j * cell + 1) + '" y="' + px(mt + i * cell + 1) + '" width="' + px(cell - 2) + '" height="' + px(cell - 2) + '" rx="3" fill="' + col + '"' + tip(vars[i] + ' × ' + vars[j] + ':  r = ' + fmt(r, 4)) + '/>';
+      if (cell >= 34) s += '<text x="' + px(ml + j * cell + cell / 2) + '" y="' + px(mt + i * cell + cell / 2 + 4) + '" text-anchor="middle" font-size="11.5" fill="' + textOn(col.startsWith('rgb') ? col : t.mid) + '" pointer-events="none">' + (ok ? r.toFixed(2) : '—') + '</text>';
+    }
+  }
+  const bx = ml + gw + 18;
+  s += '<rect x="' + bx + '" y="' + mt + '" width="12" height="' + gw + '" rx="2" fill="url(#hgrad)"/>';
+  [['1', 0], ['0', 0.5], ['−1', 1]].forEach(([l, f]) => { s += '<text x="' + (bx + 18) + '" y="' + px(mt + f * gw + 4) + '" font-size="11" fill="' + t.ink2 + '">' + l + '</text>'; });
+  return s + '</svg>';
+}
+
+function plotReg(kind) {
+  if (!regState) return; const { m, yn } = regState;
+  const obs = m.fitted.map((f, i) => f + m.resid[i]);
+  if (kind === 'fit') {
+    const lo = Math.min(minOf(obs), minOf(m.fitted)), hi = Math.max(maxOf(obs), maxOf(m.fitted));
+    draw('plot-reg', (W, t) => scatterSVG(W, t, { title: 'Observado vs. predicho (' + yn + ')', sub: 'R² = ' + fmt(m.r2, 4) + ' · n = ' + m.n, xl: 'Valor predicho', yl: 'Valor observado', xs: m.fitted, ys: obs, xr: [lo, hi], yr: [lo, hi], xtip: 'Predicho', ytip: 'Observado', pointLabel: 'Observaciones', line: { label: 'Ajuste perfecto', x0: lo, y0: lo, x1: hi, y1: hi } }));
+  } else {
+    const lo = minOf(m.fitted), hi = maxOf(m.fitted);
+    draw('plot-reg', (W, t) => scatterSVG(W, t, { title: 'Residuos vs. predicho', sub: 'Los residuos deben repartirse al azar alrededor de 0', xl: 'Valor predicho', yl: 'Residuo', xs: m.fitted, ys: m.resid, xtip: 'Predicho', ytip: 'Residuo', pointLabel: 'Residuos', line: { label: 'Residuo = 0', x0: lo, y0: 0, x1: hi, y1: 0 } }));
+  }
+  $('#reg-plotbar').hidden = false;
+}
+
+/* ====================== correlación ====================== */
+function heat(r) {
+  if (!isFinite(r)) return '';
+  const a = (Math.min(1, Math.abs(r)) * 0.55).toFixed(2);
+  return r >= 0 ? 'background:rgba(42,120,214,' + a + ')' : 'background:rgba(235,104,52,' + a + ')';
+}
+function renderCorr(auto) {
+  const msg = $('#corr-msg'); clearErr(msg);
+  const vars = checked('c-vars'), method = $('#c-method').value;
+  if (vars.length < 2) { $('#corr-out').innerHTML = ''; $('#corr-plot-card').hidden = true; if (!auto) showErr(msg, 'Marca al menos 2 variables numéricas.'); return; }
+  const k = vars.length, R = [], P = [], N = [];
+  for (let i = 0; i < k; i++) { R.push([]); P.push([]); N.push([]); for (let j = 0; j < k; j++) {
+    let [x, y] = pairsOf(vars[i], vars[j]);
+    if (method === 'spearman') { x = S.rank(x); y = S.rank(y); }
+    const r = i === j ? (x.length ? 1 : NaN) : S.pearson(x, y); R[i].push(r); N[i].push(x.length); P[i].push(i === j ? NaN : S.corrP(r, x.length));
+  } }
+  const name = method === 'pearson' ? 'Pearson' : 'Spearman';
+  const tr = T(['', ...vars], vars.map((v, i) => [v, ...R[i].map(r => ({ v: fmt(r), style: heat(r) }))]));
+  const tp = T(['', ...vars], vars.map((v, i) => [v, ...P[i].map((p, j) => i === j ? '—' : fmtP(p))]));
+  const tn = T(['', ...vars], vars.map((v, i) => [v, ...N[i].map(n => String(n))]));
+  $('#corr-out').innerHTML = '<div><h4>Coeficiente de ' + name + '</h4>' + tblHTML(tr) + '</div><div><h4>Valor p (dos colas)</h4>' + tblHTML(tp) + '</div><details><summary>Observaciones por par</summary>' + tblHTML(tn) + '</details>' +
+    '<p class="note">Cada par usa solo las filas donde ambas variables tienen valor.</p>';
+  lastResults.corr = 'Correlación ' + name + ':\n' + tblText(T(tr.head, tr.rows.map(r => r.map(c => (c && c.v !== undefined) ? c.v : c)))) + '\n\nValor p:\n' + tblText(tp);
+  $('#corr-plot-card').hidden = false;
+  draw('plot-corr', (W, t) => heatSVG(W, t, vars, R, 'Matriz de correlación (' + name + ')'));
+}
+
+/* ====================== regresión ====================== */
+let regState = null;
+function runRegression() {
+  const msg = $('#reg-msg'); clearErr(msg);
+  const yn = $('#r-y').value, xs = checked('r-x');
+  if (!yn || !xs.length) return showErr(msg, 'Elige la variable Y y al menos una variable X.');
+  try {
+    const cols = [], names = ['Constante'];
+    for (const c of xs) {
+      if (D.types[c] === 'num') { cols.push({ c, f: r => r[c] }); names.push(c); }
+      else { const lv = levels(c); if (lv.length < 2) throw new Error('"' + c + '" tiene una sola categoría y no aporta al modelo.'); if (lv.length > 20) throw new Error('"' + c + '" tiene ' + lv.length + ' categorías; usa una variable con 20 o menos.'); lv.slice(1).forEach(l => { cols.push({ c, f: r => (r[c] === null ? null : (String(r[c]) === l ? 1 : 0)) }); names.push(c + '[' + l + ']'); }); }
+    }
+    const X = [], y = [];
+    for (const r of D.rows) {
+      if (!isNum(r[yn])) continue; const row = [1]; let ok = true;
+      for (const col of cols) { const v = col.f(r); if (v === null || !isNum(v)) { ok = false; break; } row.push(v); }
+      if (ok) { X.push(row); y.push(r[yn]); }
+    }
+    if (!X.length) throw new Error('No quedan filas completas con esas variables.');
+    const m = ols(X, y); regState = { m, yn };
+    const dropped = D.rows.length - m.n, tcrit = M.tinv(0.975, m.df);
+    const sig = p => p < 0.001 ? '***' : p < 0.01 ? '**' : p < 0.05 ? '*' : p < 0.1 ? '.' : '';
+    const rows = names.map((nm, j) => { const t = m.beta[j] / m.se[j], p = S.tP(t, m.df); return [nm, fmt(m.beta[j]), fmt(m.se[j]), fmt(t, 3), fmtP(p), fmt(m.beta[j] - tcrit * m.se[j]), fmt(m.beta[j] + tcrit * m.se[j]), sig(p)]; });
+    const tbl = T(['Variable', 'Coeficiente', 'Error est.', 't', 'P>|t|', 'IC 95% inf.', 'IC 95% sup.', 'Sig.'], rows);
+    const eq = yn + ' = ' + fmt(m.beta[0], 3) + names.slice(1).map((nm, j) => (m.beta[j + 1] < 0 ? ' − ' : ' + ') + fmt(Math.abs(m.beta[j + 1]), 3) + '·' + nm).join('');
+    const kv = [['R²', fmt(m.r2)], ['R² ajustado', fmt(m.r2adj)], ['F(' + (m.p - 1) + ', ' + m.df + ')', fmt(m.F, 3)], ['Valor p (F)', fmtP(m.pF)], ['Observaciones', m.n], ['Error residual', fmt(m.sigma)], ['AIC', fmt(m.aic, 2)], ['BIC', fmt(m.bic, 2)]];
+    $('#reg-out').innerHTML = '<h2 style="margin:0 0 10px">Resultados</h2><dl class="kv">' + kv.map(([a, b]) => '<div><dt>' + esc(a) + '</dt><dd>' + esc(b) + '</dd></div>').join('') + '</dl>' +
+      '<div class="eq">' + esc(eq) + '</div>' + tblHTML(tbl) +
+      '<p class="note">Significancia: *** p&lt;0.001, ** p&lt;0.01, * p&lt;0.05, . p&lt;0.1.</p>' +
+      '<p class="verdict' + (m.pF < 0.05 ? '' : ' no') + '">El modelo explica ' + (100 * m.r2).toFixed(1) + ' % de la variación de ' + esc(yn) + '. ' + (m.pF < 0.05 ? 'En conjunto es estadísticamente significativo (p ' + (m.pF < 0.0001 ? '< 0.0001' : '= ' + m.pF.toFixed(4)) + ').' : 'En conjunto no es significativo al 5 % (p = ' + m.pF.toFixed(4) + ').') + '</p>' +
+      (dropped ? '<p class="note">Se excluyeron ' + dropped + ' filas con vacíos en las variables del modelo.</p>' : '');
+    lastResults.reg = 'Regresión lineal (OLS): ' + eq + '\nR² = ' + fmt(m.r2) + ', R² ajustado = ' + fmt(m.r2adj) + ', F(' + (m.p - 1) + ',' + m.df + ') = ' + fmt(m.F, 3) + ', p = ' + fmtP(m.pF) + ', n = ' + m.n + '\n\n' + tblText(tbl);
+    $('#reg-card').hidden = false; $('#plot-reg').hidden = true; $('#reg-plotbar').hidden = true; delete plots['plot-reg'];
+  } catch (e) { showErr(msg, e.message); $('#reg-card').hidden = true; }
+}
+/* ====================== pruebas ====================== */
+function resultHTML(key, title, tables, lines, verdict, reject) {
+  lastResults[key] = title + '\n' + tables.map(tblText).join('\n\n') + '\n' + lines.join('\n') + '\n' + verdict;
+  return '<h4>' + esc(title) + '</h4>' + tables.map(t => tblHTML(t)).join('<div style="height:8px"></div>') +
+    lines.map(l => '<p class="note">' + esc(l) + '</p>').join('') + '<p class="verdict' + (reject ? '' : ' no') + '">' + esc(verdict) + '</p>';
+}
+const alpha = () => parseFloat($('#alpha').value);
+
+function runT() {
+  const out = $('#t-out'); out.innerHTML = '';
+  try {
+    const nv = $('#t-num').value, gv = $('#t-grp').value, ga = $('#t-a').value, gb = $('#t-b').value;
+    if (!nv || !gv) throw new Error('Elige la variable numérica y la variable de grupo.');
+    if (levels(gv).length < 2) throw new Error('La variable de grupo necesita al menos 2 categorías.');
+    if (ga === gb) throw new Error('Elige dos grupos distintos (A y B).');
+    const g = groupsOf(nv, gv), a = g.get(ga) || [], b = g.get(gb) || [];
+    if (a.length < 2 || b.length < 2) throw new Error('Cada grupo necesita al menos 2 valores numéricos.');
+    const n1 = a.length, n2 = b.length, m1 = S.mean(a), m2 = S.mean(b), v1 = S.vari(a), v2 = S.vari(b), welch = $('#t-var').value === 'welch';
+    let se, df;
+    if (welch) { const x = v1 / n1, y = v2 / n2; se = Math.sqrt(x + y); df = (x + y) ** 2 / (x * x / (n1 - 1) + y * y / (n2 - 1)); }
+    else { const sp = ((n1 - 1) * v1 + (n2 - 1) * v2) / (n1 + n2 - 2); se = Math.sqrt(sp * (1 / n1 + 1 / n2)); df = n1 + n2 - 2; }
+    if (!(se > 0)) throw new Error('Los dos grupos no tienen variación; no se puede calcular el estadístico t.');
+    const t = (m1 - m2) / se, p = S.tP(t, df), tc = M.tinv(1 - alpha() / 2, df), diff = m1 - m2;
+    const sp = Math.sqrt(((n1 - 1) * v1 + (n2 - 1) * v2) / (n1 + n2 - 2));
+    const reject = p < alpha();
+    out.innerHTML = resultHTML('t', 't-test (' + (welch ? 'Welch' : 'Student') + '): ' + nv + ' por ' + gv,
+      [T(['Grupo', 'n', 'Media', 'Desv. est.'], [[ga, n1, fmt(m1), fmt(Math.sqrt(v1))], [gb, n2, fmt(m2), fmt(Math.sqrt(v2))]]),
+       T(['t', 'gl', 'Valor p', 'Diferencia (A−B)', 'IC inf.', 'IC sup.', 'd de Cohen'], [[fmt(t, 4), fmt(df, 2), fmtP(p), fmt(diff), fmt(diff - tc * se), fmt(diff + tc * se), fmt(sp > 0 ? diff / sp : NaN, 3)]])],
+      ['Intervalo de confianza al ' + Math.round((1 - alpha()) * 100) + ' % para la diferencia de medias.'],
+      'p = ' + fmtP(p) + (reject ? ' < ' : ' ≥ ') + 'α = ' + alpha() + ': ' + (reject ? 'se rechaza H₀; las medias de ' + ga + ' y ' + gb + ' difieren significativamente.' : 'no se rechaza H₀; no hay evidencia de diferencia entre las medias.'), reject);
+  } catch (e) { showErr(out, e.message); }
+}
+function runChi() {
+  const out = $('#chi-out'); out.innerHTML = '';
+  try {
+    const v1 = $('#c-v1').value, v2 = $('#c-v2').value;
+    if (!v1 || !v2) throw new Error('Elige las dos variables.');
+    if (v1 === v2) throw new Error('Elige dos variables distintas.');
+    const rl = levels(v1), cl = levels(v2);
+    if (rl.length > 30 || cl.length > 30) throw new Error('Una de las variables tiene más de 30 categorías; la prueba no sería interpretable.');
+    const ri = new Map(rl.map((l, i) => [l, i])), ci = new Map(cl.map((l, i) => [l, i]));
+    const O = rl.map(() => cl.map(() => 0)); let n = 0;
+    for (const r of D.rows) { if (r[v1] === null || r[v2] === null) continue; O[ri.get(String(r[v1]))][ci.get(String(r[v2]))]++; n++; }
+    const R = rl.length, C = cl.length;
+    if (R < 2 || C < 2) throw new Error('Cada variable necesita al menos 2 categorías.');
+    const rt = O.map(r => S.sum(r)), ct = cl.map((_, j) => S.sum(O.map(r => r[j])));
+    const dof = (R - 1) * (C - 1), yates = dof === 1; let chi = 0, chi0 = 0, low = 0;
+    const E = O.map((r, i) => r.map((_, j) => rt[i] * ct[j] / n));
+    for (let i = 0; i < R; i++) for (let j = 0; j < C; j++) {
+      const e = E[i][j], d = Math.abs(O[i][j] - e), adj = yates ? Math.min(0.5, d) : 0;
+      chi += (d - adj) ** 2 / e; chi0 += d * d / e; if (e < 5) low++;
+    }
+    const p = M.chi2sf(chi, dof), V = Math.sqrt(chi0 / (n * Math.min(R - 1, C - 1))), reject = p < alpha();
+    const obs = T([v1 + ' \\ ' + v2, ...cl, 'Total'], [...O.map((r, i) => [rl[i], ...r, rt[i]]), ['Total', ...ct, n]]);
+    const exp = T([v1 + ' \\ ' + v2, ...cl], E.map((r, i) => [rl[i], ...r.map(x => fmt(x, 2))]));
+    const res = T(['χ²', 'gl', 'Valor p', 'V de Cramér', 'n'], [[fmt(chi, 4), dof, fmtP(p), fmt(V, 3), n]]);
+    const lines = []; if (yates) lines.push('Tabla 2×2: se aplicó la corrección de Yates (igual que scipy).');
+    if (low) lines.push('Atención: ' + low + ' de ' + (R * C) + ' casillas tienen frecuencia esperada menor que 5; el resultado puede ser poco fiable.');
+    out.innerHTML = resultHTML('chi', 'Chi-cuadrado de independencia: ' + v1 + ' y ' + v2, [obs, res], lines,
+      'p = ' + fmtP(p) + (reject ? ' < ' : ' ≥ ') + 'α = ' + alpha() + ': ' + (reject ? 'se rechaza H₀; hay asociación entre las variables.' : 'no se rechaza H₀; no hay evidencia de asociación.'), reject) +
+      '<details style="margin-top:8px"><summary>Frecuencias esperadas</summary>' + tblHTML(exp) + '</details>';
+  } catch (e) { showErr(out, e.message); }
+}
+function runAnova() {
+  const out = $('#anova-out'); out.innerHTML = '';
+  try {
+    const nv = $('#a-num').value, gv = $('#a-grp').value;
+    if (!nv || !gv) throw new Error('Elige la variable numérica y el factor.');
+    const g = groupsOf(nv, gv), ks = [...g.keys()].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+    if (ks.length < 2) throw new Error('Se necesitan al menos 2 grupos con datos.');
+    if (ks.length > 30) throw new Error('El factor tiene ' + ks.length + ' grupos; elige uno con 30 o menos.');
+    const all = ks.flatMap(k => g.get(k)), N = all.length, k = ks.length, gm = S.mean(all);
+    if (N <= k) throw new Error('Hacen falta más observaciones que grupos.');
+    let ssb = 0, ssw = 0; ks.forEach(key => { const v = g.get(key), m = S.mean(v); ssb += v.length * (m - gm) ** 2; ssw += v.reduce((s, x) => s + (x - m) ** 2, 0); });
+    if (!(ssw > 0)) throw new Error('No hay variación dentro de los grupos; no se puede calcular F.');
+    const df1 = k - 1, df2 = N - k, F = (ssb / df1) / (ssw / df2), p = M.fsf(F, df1, df2), reject = p < alpha();
+    const tab = T(['Fuente', 'Suma de cuadrados', 'gl', 'Media cuadrática', 'F', 'Valor p'], [['Entre grupos', fmt(ssb), df1, fmt(ssb / df1), fmt(F, 4), fmtP(p)], ['Dentro de grupos', fmt(ssw), df2, fmt(ssw / df2), '', '']]);
+    const gt = T(['Grupo', 'n', 'Media', 'Desv. est.'], ks.map(key => { const v = g.get(key); return [key, v.length, fmt(S.mean(v)), fmt(S.sd(v))]; }));
+    out.innerHTML = resultHTML('anova', 'ANOVA de un factor: ' + nv + ' ~ ' + gv, [tab, gt], ['η² = ' + fmt(ssb / (ssb + ssw), 4) + ' (proporción de la variación explicada por el factor).'],
+      'p = ' + fmtP(p) + (reject ? ' < ' : ' ≥ ') + 'α = ' + alpha() + ': ' + (reject ? 'se rechaza H₀; al menos un grupo tiene una media distinta.' : 'no se rechaza H₀; no hay evidencia de diferencias entre las medias.'), reject);
+  } catch (e) { showErr(out, e.message); }
+}
+
+/* ====================== distribuciones ====================== */
+function distMsg(m) { const el = $('#d-msg'); if (m) showErr(el, m); else clearErr(el); $('#d-card').hidden = false; }
+function numOrNull(id) { const v = $('#' + id).value.trim(); return v === '' ? null : Number(v); }
+function plotDiscrete(kind) {
+  let pmf, xmax, name, sub;
+  if (kind === 'binom') {
+    const n = Number($('#b-n').value), p = Number($('#b-p').value);
+    if (!Number.isInteger(n) || n < 1 || n > 1000) return distMsg('n debe ser un entero entre 1 y 1000.');
+    if (!(p >= 0 && p <= 1)) return distMsg('p debe estar entre 0 y 1.');
+    pmf = k => M.binomPmf(k, n, p); xmax = n;
+    name = 'Binomial (n = ' + n + ', p = ' + p + ')'; sub = 'media = ' + fmt(n * p, 3) + ', desv. est. = ' + fmt(Math.sqrt(n * p * (1 - p)), 3);
+  } else {
+    const lam = Number($('#p-l').value);
+    if (!(lam > 0 && lam <= 1000)) return distMsg('λ debe ser mayor que 0 y no pasar de 1000.');
+    pmf = k => M.poisPmf(k, lam); xmax = Math.max(10, Math.ceil(lam * 4));
+    name = 'Poisson (λ = ' + lam + ')'; sub = 'media = varianza = ' + lam;
+  }
+  const a = numOrNull(kind === 'binom' ? 'b-a' : 'p-a'), b = numOrNull(kind === 'binom' ? 'b-b' : 'p-b');
+  if ((a !== null && !isFinite(a)) || (b !== null && !isFinite(b))) return distMsg('Los límites a y b deben ser números.');
+  let lo = null, hi = null, prob = null;
+  if (a !== null || b !== null) {
+    lo = a === null ? 0 : Math.max(0, Math.ceil(a)); hi = b === null ? Infinity : Math.floor(b);
+    if (lo > hi) return distMsg('El límite a no puede ser mayor que b.');
+    prob = 0; const top = isFinite(hi) ? hi : (kind === 'binom' ? xmax : Math.max(xmax, 5000));
+    for (let k = lo; k <= top; k++) prob += pmf(k);
+    prob = Math.min(1, prob);
+  }
+  const xs = []; for (let k = 0; k <= xmax; k++) if (pmf(k) > 1e-6 || (lo !== null && k >= lo && k <= hi)) xs.push(k);
+  const ys = xs.map(pmf), X0 = xs[0] - 0.5, X1 = xs[xs.length - 1] + 0.5;
+  let ticks = []; if (X1 - X0 <= 26) ticks = xs.slice(); else ticks = niceScale(xs[0], xs[xs.length - 1], 9).ticks.filter(v => v >= xs[0] && v <= xs[xs.length - 1]);
+  const Y = niceScale(0, maxOf(ys) * 1.12);
+  distMsg('');
+  draw('plot-d', (W, t) => chartSVG({ W, t, title: 'Distribución ' + name, sub, xl: kind === 'binom' ? 'Éxitos (k)' : 'Eventos (k)', yl: 'Probabilidad', x: { lo: X0, hi: X1, ticks }, y: Y, legend: prob !== null ? [{ label: 'Área pedida', color: t.s[1] }, { label: 'Resto', color: t.s[0] }] : null, draw: c => {
+    let g = ''; const half = Math.min(0.42, 0.45);
+    xs.forEach((k, i) => { const x0 = c.sx(k - half), x1 = c.sx(k + half), y = c.sy(ys[i]), inr = lo !== null && k >= lo && k <= hi;
+      g += '<rect x="' + px(x0) + '" y="' + px(y) + '" width="' + px(Math.max(1, x1 - x0)) + '" height="' + px(Math.max(0, c.sy(0) - y)) + '" rx="2" fill="' + (inr ? t.s[1] : t.s[0]) + '"' + tip('k = ' + k + '   P(X = k) = ' + ys[i].toFixed(5)) + '/>'; });
+    return g;
+  } }));
+  $('#d-info').textContent = prob !== null ? 'P(' + (a === null ? '' : lo + ' ≤ ') + 'X' + (b === null ? '' : ' ≤ ' + hi) + ') = ' + fmt(prob, 5) : 'Pasa el cursor sobre las barras para ver cada probabilidad.';
+}
+function plotNormal() {
+  let m = Number($('#n-m').value), s = Number($('#n-s').value); const v = $('#n-var').value;
+  if (v) { const x = numVals(v); if (x.length < 2) return distMsg('La variable necesita al menos 2 valores.'); m = S.mean(x); s = S.sd(x); $('#n-m').value = +m.toFixed(4); $('#n-s').value = +s.toFixed(4); }
+  if (!isFinite(m) || !(s > 0)) return distMsg('Escribe una media y una desviación estándar mayor que 0.');
+  const a = numOrNull('n-a'), b = numOrNull('n-b');
+  if ((a !== null && !isFinite(a)) || (b !== null && !isFinite(b))) return distMsg('Los límites a y b deben ser números.');
+  if (a !== null && b !== null && a >= b) return distMsg('El límite a debe ser menor que b.');
+  const lo = m - 4 * s, hi = m + 4 * s;
+  let prob = null, A = null, B = null;
+  if (a !== null || b !== null) { A = Math.max(lo, a === null ? lo : a); B = Math.min(hi, b === null ? hi : b); prob = M.normcdf(b === null ? Infinity : b, m, s) - M.normcdf(a === null ? -Infinity : a, m, s); }
+  distMsg('');
+  const X = niceScale(lo, hi, 9), Y = niceScale(0, S.norm(m, m, s) * 1.12);
+  draw('plot-d', (W, t) => chartSVG({ W, t, title: 'Distribución Normal N(' + fmt(m, 2) + ', ' + fmt(s, 2) + ')', sub: 'media = ' + fmt(m, 3) + ', desv. est. = ' + fmt(s, 3), xl: 'x', yl: 'Densidad f(x)', x: X, y: Y, legend: prob !== null ? [{ label: 'Área pedida', color: t.s[1] }, { label: 'Densidad', color: t.s[0], line: true }] : null, draw: c => {
+    const pts = Array.from({ length: 240 }, (_, i) => { const u = lo + (hi - lo) * i / 239; return [u, S.norm(u, m, s)]; });
+    let g = '';
+    if (A !== null && B > A) {
+      const sp = Array.from({ length: 160 }, (_, i) => { const u = A + (B - A) * i / 159; return [u, S.norm(u, m, s)]; });
+      g += '<polygon fill="' + t.s[1] + '" fill-opacity="0.38" points="' + px(c.sx(A)) + ',' + px(c.sy(0)) + ' ' + sp.map(p => px(c.sx(p[0])) + ',' + px(c.sy(p[1]))).join(' ') + ' ' + px(c.sx(B)) + ',' + px(c.sy(0)) + '"/>';
+    }
+    g += '<polyline fill="none" stroke="' + t.s[0] + '" stroke-width="2.6" points="' + pts.map(p => px(c.sx(p[0])) + ',' + px(c.sy(p[1]))).join(' ') + '"/>';
+    g += '<line x1="' + px(c.sx(m)) + '" x2="' + px(c.sx(m)) + '" y1="' + px(c.sy(0)) + '" y2="' + px(c.sy(S.norm(m, m, s))) + '" stroke="' + t.ink2 + '" stroke-dasharray="3 4"/>';
+    return g;
+  } }));
+  $('#d-info').textContent = prob !== null ? 'P(' + (a === null ? '' : a + ' < ') + 'X' + (b === null ? '' : ' < ' + b) + ') = ' + fmt(prob, 5) + ' (' + (100 * prob).toFixed(2) + ' %)' : 'Define a y/o b para sombrear un área.';
+}
+
+/* ====================== exportar ====================== */
+async function saveFile(name, data) {
+  let dl = null;
+  try { if (window.claude && window.claude.use) dl = await window.claude.use('downloads'); } catch (e) { dl = null; }
+  if (dl) {
+    try { await dl.save({ filename: name, data }); toast('Archivo listo: ' + name); }
+    catch (e) { if (e && e.code === 'declined') return; toast('No se pudo guardar el archivo.', true); }
+    return;
+  }
+  try {
+    const blob = data instanceof Blob ? data : new Blob([data]), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  } catch (e) { toast('No se pudo guardar el archivo.', true); }
+}
+const baseName = () => (D.name || 'datos').replace(/\.[^.]+$/, '').replace(/[^\w\-áéíóúñ]+/g, '_');
+function exportXlsx() {
+  if (!D.rows.length) return toast('No hay datos para exportar.', true);
+  if (typeof XLSX === 'undefined') return toast('El exportador de Excel no cargó. Usa Exportar CSV.', true);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(D.rows, { header: D.cols }), 'Datos');
+  saveFile(baseName() + '.xlsx', XLSX.write(wb, { bookType: 'xlsx', type: 'array' }));
+}
+function exportCsv() {
+  if (!D.rows.length) return toast('No hay datos para exportar.', true);
+  const q = v => { if (v === null) return ''; const s = String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const txt = '\uFEFF' + [D.cols.map(q).join(','), ...D.rows.map(r => D.cols.map(c => q(r[c])).join(','))].join('\r\n');
+  saveFile(baseName() + '.csv', txt);
+}
+function buildReport() {
+  const parts = ['INFORME ESTADÍSTICO: ' + D.name, 'Filas: ' + D.rows.length + '   Columnas: ' + D.cols.length, ''];
+  if (numCols().length) parts.push('Resumen estadístico (variables numéricas)', '', tblText(descrTable()), '');
+  catCols().forEach(c => { parts.push('Frecuencias: ' + c, '', tblText(freqTable(c).t), ''); });
+  const titles = { corr: null, reg: null, t: null, chi: null, anova: null };
+  Object.keys(titles).forEach(k => { if (lastResults[k]) parts.push(lastResults[k], ''); });
+  return parts.join('\n');
+}
+function exportTxt() { if (!D.rows.length) return toast('Carga o pega los datos primero.', true); saveFile('informe_' + baseName() + '.txt', buildReport()); }
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); toast('Copiado al portapapeles.'); }
+  catch (e) { toast('No se pudo copiar. Usa el informe TXT desde la pestaña Datos.', true); }
+}
+
+/* ====================== pestañas y eventos ====================== */
+const onShow = {
+  descriptiva: () => {},
+  correlacion: () => { if (D.rows.length && !plots['plot-corr']) renderCorr(true); },
+  graficos: () => { if (D.rows.length && !plots['plot-g'] && numCols().length) plotHist(); },
+  distribuciones: () => { if (!plots['plot-d']) plotNormal(); }
+};
+function showTab(id) {
+  $$('.tab').forEach(b => { const on = b.dataset.tab === id; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; });
+  $$('.panel').forEach(p => { p.hidden = p.id !== 'p-' + id; });
+  if (onShow[id]) onShow[id]();
+  redrawVisible();
+}
+$$('.tab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+$$('[data-goto]').forEach(b => b.addEventListener('click', () => showTab(b.dataset.goto)));
+$$('[data-save]').forEach(b => b.addEventListener('click', () => savePlot(b.dataset.save, b.dataset.name)));
+
+$('#file').addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
+const drop = $('#drop');
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => loadFile(e.dataTransfer.files[0]));
+$('#btn-sample').addEventListener('click', () => { makeSample(); finishLoad('Datos de ejemplo cargados.'); });
+$('#btn-paste').addEventListener('click', () => { const t = $('#pasteBox').value; if (!t.trim()) return toast('Pega primero la tabla en el cuadro.', true); loadText(t, 'tabla pegada'); });
+document.addEventListener('paste', e => {
+  const tg = e.target; if (tg && /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)) return;
+  const t = e.clipboardData && e.clipboardData.getData('text'); if (t && t.trim()) { e.preventDefault(); loadText(t, 'tabla pegada'); }
+});
+$('#sheet').addEventListener('change', e => { try { loadSheet(e.target.value); finishLoad('Hoja cargada: ' + e.target.value); } catch (er) { toast(er.message, true); } });
+$('#btn-clear').addEventListener('click', () => { D.cols = []; D.rows = []; D.types = {}; D.name = ''; D.wb = null; D.sample = false; finishLoad('Datos eliminados.'); });
+$('#btn-dropna').addEventListener('click', () => {
+  const before = D.rows.length; D.rows = D.rows.filter(r => D.cols.every(c => r[c] !== null));
+  if (!D.rows.length) { D.rows = []; }
+  finishLoad('Se quitaron ' + (before - D.rows.length) + ' filas con vacíos.');
+});
+$('#view-data').addEventListener('click', () => { D.view = 'data'; renderDatos(); });
+$('#view-vars').addEventListener('click', () => { D.view = 'vars'; renderDatos(); });
+$('#btn-xlsx').addEventListener('click', exportXlsx);
+$('#btn-csv').addEventListener('click', exportCsv);
+$('#btn-txt').addEventListener('click', exportTxt);
+$('#copy-desc').addEventListener('click', () => copyText(tblText(descrTable())));
+$('#f-var').addEventListener('change', renderFreq);
+$('#btn-corr').addEventListener('click', () => renderCorr(false));
+$('#c-method').addEventListener('change', () => renderCorr(true));
+$('#r-y').addEventListener('change', refreshRegX);
+$('#btn-reg').addEventListener('click', runRegression);
+$('#btn-reg-fit').addEventListener('click', () => plotReg('fit'));
+$('#btn-reg-res').addEventListener('click', () => plotReg('res'));
+$('#t-grp').addEventListener('change', refreshTLevels);
+$('#btn-t').addEventListener('click', runT);
+$('#btn-chi').addEventListener('click', runChi);
+$('#btn-anova').addEventListener('click', runAnova);
+$('#g-hist').addEventListener('click', plotHist);
+$('#g-box').addEventListener('click', plotBox);
+$('#g-scatter').addEventListener('click', plotScatter);
+$('#g-bar').addEventListener('click', plotBar);
+$('#g-pie').addEventListener('click', plotPie);
+$('#btn-binom').addEventListener('click', () => plotDiscrete('binom'));
+$('#btn-pois').addEventListener('click', () => plotDiscrete('pois'));
+$('#btn-norm').addEventListener('click', plotNormal);
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => setTimeout(redrawVisible, 50));
+new MutationObserver(() => setTimeout(redrawVisible, 50)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+window.addEventListener('error', e => { if (e && e.message) toast('Error: ' + e.message, true); });
+window.addEventListener('unhandledrejection', e => { toast('Error: ' + ((e.reason && e.reason.message) || e.reason), true); });
+
+/* ====================== arranque ====================== */
+makeSample();
+finishLoad();
+</script>
+
+</body></html>
